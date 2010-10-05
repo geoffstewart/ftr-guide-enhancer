@@ -1,0 +1,5 @@
+C:\devel\fortherecord\guide-enricher\GuideEnricher\ConfigTool\bin\Debug\ConfigTool.exe
+C:\devel\fortherecord\guide-enricher\GuideEnricher\ConfigTool\bin\Debug\ConfigTool.pdb
+C:\devel\fortherecord\guide-enricher\GuideEnricher\ConfigTool\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\devel\fortherecord\guide-enricher\GuideEnricher\ConfigTool\obj\x86\Debug\ConfigTool.exe
+C:\devel\fortherecord\guide-enricher\GuideEnricher\ConfigTool\obj\x86\Debug\ConfigTool.pdb
