@@ -1,0 +1,5 @@
+#summary SchedulesDirect is a online provider of electronic program guide data.
+
+= Details =
+
+This is a paid service available at schedulesdirect.org.
