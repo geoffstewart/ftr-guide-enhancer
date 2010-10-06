@@ -2,4 +2,4 @@
 
 = Details =
 
-This is a paid service available at schedulesdirect.org.
+This is a paid service available at http://www.schedulesdirect.org.
