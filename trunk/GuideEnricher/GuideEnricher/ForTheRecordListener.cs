@@ -51,7 +51,6 @@ namespace GuideEnricher
       {
          Logger.Verbose("{0}: Handle NewGuideData event",MODULE);
          enrichGuideData();
-         
       }
       
       public override void UpcomingRecordingsChanged()
@@ -81,18 +80,22 @@ namespace GuideEnricher
          
          for (int i = 0; i < recs.Length; i++) {
             UpcomingProgram upProg = recs[i].Program;
-            
-            GuideProgram prog = tgsa.GetProgramById(upProg.UpcomingProgramId);
-            
-            // enrich program
-            IProgramSummary updatedProgram = de.enrichProgram(prog);
-            
-            prog.EpisodeNumberDisplay = updatedProgram.EpisodeNumberDisplay;
-            
-            // update program in guide
-            
-            tgsa.ImportProgram(prog, GuideSource.Other);
-                        
+
+            if (upProg.GuideProgramId != null)
+            {
+
+                GuideProgram prog = tgsa.GetProgramById((Guid)upProg.GuideProgramId);
+
+                // enrich program
+                IProgramSummary updatedProgram = de.enrichProgram(prog);
+
+                prog.EpisodeNumberDisplay = updatedProgram.EpisodeNumberDisplay;
+
+                // update program in guide
+
+                tgsa.ImportProgram(prog, GuideSource.Other);
+
+            }       
               
          }
       }
