@@ -27,6 +27,8 @@ namespace GuideEnricher
    public class GuideEnricher : ServiceBase
    {
       public const string MyServiceName = "GuideEnricher";
+
+      ForTheRecordServiceAgent agent;
       
       public GuideEnricher()
       {
@@ -53,27 +55,54 @@ namespace GuideEnricher
       protected override void OnStart(string[] args)
       {
          
-         Thread.Sleep(20000);
-         
-         ServerSettings serverSettings = new ServerSettings();
-         serverSettings.ServerName = "localhost";
-         serverSettings.Transport = ServiceTransport.NetTcp;
-         serverSettings.Port = 49942;
-         
-         ServiceChannelFactories.Initialize(serverSettings, false);
-         
-//         ftrl = new ForTheRecordListener();
+         Thread.Sleep(2000);
 
-         ServiceHost sh = ForTheRecordListener.CreateServiceHost(Config.getProperty("serviceUrl"));
-         
-         sh.Open();
-         
+         try
+         {
+             ServerSettings serverSettings = new ServerSettings();
+             serverSettings.ServerName = "localhost";
+             serverSettings.Transport = ServiceTransport.NetTcp;
+             serverSettings.Port = 49942;
 
-          using (ForTheRecordServiceAgent agent = new ForTheRecordServiceAgent())
-                {
-                    ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents;
-                    agent.EnsureEventListener(eventGroupsToListenTo, Config.getProperty("serviceUrl") , Constants.EventListenerApiVersion);
-                }
+             if (!ServiceChannelFactories.Initialize(serverSettings, false))
+             {
+                 Logger.Info("Unable to connect to ForTheRecordService, check your settings.");
+                 
+             }
+             else
+             {
+                 Logger.Info("Connected to ForTheRecordService");
+             
+
+                 //         ftrl = new ForTheRecordListener();
+
+                 ServiceHost sh = ForTheRecordListener.CreateServiceHost(Config.getProperty("serviceUrl"));
+
+                 try
+                 {
+                     sh.Open();
+                 }
+                 catch (System.ServiceProcess.TimeoutException ex)
+                 {
+                     Logger.Error("Timeout on creating the ServiceHost", ex.Message);
+                 }
+                 catch (Exception ex)
+                 {
+                     Logger.Error("Error on creating ServiceHost:{0}{1}", Environment.NewLine, ex.Message);
+                 }
+
+                 agent = new ForTheRecordServiceAgent();
+                 ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents;
+                 agent.EnsureEventListener(eventGroupsToListenTo, Config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
+
+             }
+
+         }
+         catch
+         {
+
+         }
+         
          
       }
       
@@ -82,6 +111,11 @@ namespace GuideEnricher
       /// </summary>
       protected override void OnStop()
       {
+          if (agent != null)
+          {
+              agent.RemoveEventListener(Config.getProperty("serviceUrl"));
+              agent.Dispose();
+          }
       }
       
    }
