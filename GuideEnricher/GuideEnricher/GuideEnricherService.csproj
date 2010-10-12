@@ -46,6 +46,7 @@
       <HintPath>References\ForTheRecord.ServiceContracts.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -54,17 +55,33 @@
     <Reference Include="System.Data.DataSetExtensions">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.ServiceModel">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="TvdbLib">
+      <HintPath>References\TvdbLib.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
+    <Compile Include="IDataEnricher.cs" />
+    <Compile Include="DataEnricherFactory.cs" />
+    <Compile Include="DataEnricherImpl.cs" />
+    <Compile Include="ForTheRecordListener.cs" />
     <Compile Include="GuideEnricher.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProjectInstaller.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="tvdb\TvDbDataEnricher.cs" />
+    <Compile Include="tvdb\TvdbLibAccess.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="tvdb" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
 </Project>
