@@ -11,7 +11,6 @@ using System.Text;
 using TvdbLib;
 using TvdbLib.Cache;
 using TvdbLib.Data;
-using ForTheRecord.Common.Logging;
 using System.Collections.Generic;
 using System.Collections;
 
@@ -68,7 +67,7 @@ namespace GuideEnricher.tvdb
                }
             }
 
-            Logger.Info("SD-TvDb: Could not find series match: {0} renamed {1}", seriesName, searchSeries);
+            Logger.Error("SD-TvDb: Could not find series match: {0} renamed {1}", seriesName, searchSeries);
             return "";
          } else {
             return "";
@@ -254,7 +253,7 @@ namespace GuideEnricher.tvdb
             return getSeasonEpisode(seriesName,seriesId,episodeName,allowTailMatch,true);
          }
          
-         Logger.Info("SD-TvDb: No episode match for series: {0}, seriesId: {1}, episodeName: {2}",seriesName,seriesId,episodeName);
+         Logger.Error("SD-TvDb: No episode match for series: {0}, seriesId: {1}, episodeName: {2}",seriesName,seriesId,episodeName);
          // still can't match.. return nothing
          return "";
       }

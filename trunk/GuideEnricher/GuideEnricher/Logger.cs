@@ -39,14 +39,14 @@ namespace GuideEnricher
         {
             // throws an exception about a missing dll 
             //ForTheRecord.Common.Logging.Logger.Info(message, args);
-            WriteEventLog(string.Format(message, args), LogType.Information);
+            WriteEventLog(string.Format(message, args), LogType.Warning);
         }
 
         public static void Error(string message, params string[] args)
         {
             // throws an exception about a missing dll 
             //ForTheRecord.Common.Logging.Logger.Info(message, args);
-            WriteEventLog(string.Format(message, args), LogType.Information);
+            WriteEventLog(string.Format(message, args), LogType.Error);
         }
 
         private static void WriteEventLog(string message, LogType logType)
