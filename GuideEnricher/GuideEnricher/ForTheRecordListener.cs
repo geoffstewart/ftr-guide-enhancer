@@ -9,10 +9,10 @@
 using System;
 using System.ServiceModel;
 using System.ServiceModel.Description;
+using System.Collections;
 
 using ForTheRecord.ServiceContracts.Events;
 using ForTheRecord.Client.Common;
-using ForTheRecord.Common.Logging;
 using ForTheRecord.Entities;
 using ForTheRecord.ServiceAgents;
 
@@ -72,33 +72,62 @@ namespace GuideEnricher
       }
       
       protected void enrichGuideData() {
-         ForTheRecord.ServiceAgents.TvGuideServiceAgent tgsa = new ForTheRecord.ServiceAgents.TvGuideServiceAgent();
-         ForTheRecord.ServiceAgents.TvSchedulerServiceAgent tssa = new ForTheRecord.ServiceAgents.TvSchedulerServiceAgent();
-         TvControlServiceAgent tcsa = new TvControlServiceAgent();
+         UpcomingRecording[] upcomingRecs = null;
+         ArrayList enrichedPrograms = new ArrayList();
          
-         UpcomingRecording[] recs = tcsa.GetAllUpcomingRecordings(UpcomingRecordingsFilter.Recordings,false);
+         using (TvControlServiceAgent tcsa = new TvControlServiceAgent()) {
+            upcomingRecs = tcsa.GetAllUpcomingRecordings(UpcomingRecordingsFilter.Recordings,false);
+         }
          
-         for (int i = 0; i < recs.Length; i++) {
-            UpcomingProgram upProg = recs[i].Program;
+         Logger.Info("{0}: Starting the process to enrich guide data.  Processing {1} upcoming shows",
+                     MODULE, Convert.ToString(upcomingRecs.Length));
+         
+         for (int i = 0; i < upcomingRecs.Length; i++) {
+            UpcomingProgram upProg = upcomingRecs[i].Program;
 
             if (upProg.GuideProgramId != null)
             {
-
-                GuideProgram prog = tgsa.GetProgramById((Guid)upProg.GuideProgramId);
+               GuideProgram prog = null;
+               using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
+                  prog = tgsa.GetProgramById((Guid)upProg.GuideProgramId);
+               }
 
                 // enrich program
-                IProgramSummary updatedProgram = de.enrichProgram(prog);
+                try {
+                   string oldEpisodeNumber = prog.EpisodeNumberDisplay;
+                   IProgramSummary updatedProgram = de.enrichProgram(prog);
+   
+                   if (!prog.EpisodeNumberDisplay.Equals(oldEpisodeNumber)) {
+                     // program was actually enriched
+                      prog.EpisodeNumberDisplay = updatedProgram.EpisodeNumberDisplay;
+                      enrichedPrograms.Add(prog);
+                   }
+                } catch (Exception ex) {
+                   Logger.Error("Error enriching program: {0}",ex.Message);
+                }
 
-                prog.EpisodeNumberDisplay = updatedProgram.EpisodeNumberDisplay;
-
-                // update program in guide
-
-                tgsa.ImportProgram(prog, GuideSource.Other);
 
             }       
               
          }
+         // if any programs were enriched, do the import ot update in teh db
+         if (enrichedPrograms.Count > 0) {
+            using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
+               Logger.Info("{0}: About to commit enriched guide data. {1} entries were enriched",
+                           MODULE, Convert.ToString(enrichedPrograms.Count));
+               GuideProgram[] progArray = new GuideProgram[enrichedPrograms.Count];
+               for (int i = 0; i < enrichedPrograms.Count; i++) {
+                  progArray[i] = (GuideProgram)enrichedPrograms[i];
+               }
+               tgsa.ImportPrograms(progArray, GuideSource.XmlTv);
+            }
+         } else {
+             Logger.Info("{0}: No programs were enriched.",
+                        MODULE);
+         }
+         
+         Logger.Info("{0}: Done enriching guide data", MODULE);
       }
-
+   
    }
 }

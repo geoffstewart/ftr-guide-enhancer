@@ -32,7 +32,7 @@ namespace GuideEnricher
             return "C:\\tvdblibcache\\";
          }
          if ("serviceUrl".Equals(propName)) {
-            return "net.tcp://localhost:49829/GuideEnricher";
+            return "net.tcp://localhost:49830/GuideEnricher";
          }
          return "";
       }

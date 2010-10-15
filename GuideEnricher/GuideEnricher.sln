@@ -1,7 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-# SharpDevelop 3.2.0.5777
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+# SharpDevelop 4.0.0.6361
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuideEnricherService", "GuideEnricher\GuideEnricherService.csproj", "{9D718DA7-3160-4968-8048-361D7C1F3009}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigTool", "ConfigTool\ConfigTool.csproj", "{D344EB44-2423-411C-9324-8226616D5DE5}"

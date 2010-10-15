@@ -36,12 +36,17 @@ namespace ConfigTool
       /// </summary>
       private void InitializeComponent()
       {
-         // 
-         // MainForm
-         // 
-         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.Text = "ConfigTool";
-         this.Name = "MainForm";
+      	this.SuspendLayout();
+      	// 
+      	// MainForm
+      	// 
+      	this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+      	this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+      	this.ClientSize = new System.Drawing.Size(500, 331);
+      	this.Name = "MainForm";
+      	this.Text = "Guide Enricher Config Tool";
+      	this.Load += new System.EventHandler(this.MainFormLoad);
+      	this.ResumeLayout(false);
       }
    }
 }

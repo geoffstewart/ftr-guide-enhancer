@@ -8,7 +8,6 @@
  */
 using System;
 using GuideEnricher;
-using ForTheRecord.Common.Logging;
 
 namespace GuideEnricher.tvdb
 {
@@ -42,7 +41,7 @@ namespace GuideEnricher.tvdb
          string seriesId = tvdblib.getSeriesId(seriesName);
          
          if (seriesId.Length == 0) {
-            Logger.Info("{0}: Cannot find series ID for {1}", MODULE, seriesName);
+            Logger.Error("{0}: Cannot find series ID for {1}", MODULE, seriesName);
             return retProgram;
          }
          
