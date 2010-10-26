@@ -36,7 +36,7 @@ namespace GuideEnricher.tvdb
          tvdbHandler = new TvdbHandler(new XmlCacheProvider(cache),tvdbid);
          tvdbHandler.InitCache();
          
-         seriesNameMapping = (Hashtable)Config.getMapProperty("TvDbSeriesMappings");
+         seriesNameMapping = (Hashtable)Config.getSeriesNameMap();
       }
       
       public void closeCache() {

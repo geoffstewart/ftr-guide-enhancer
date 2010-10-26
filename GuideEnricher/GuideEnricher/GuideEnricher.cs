@@ -73,9 +73,14 @@ namespace GuideEnricher
          try
          {
             ServerSettings serverSettings = new ServerSettings();
-            serverSettings.ServerName = "localhost";
+            serverSettings.ServerName = Config.getProperty("ftrUrlHost");
             serverSettings.Transport = ServiceTransport.NetTcp;
-            serverSettings.Port = 49942;
+            serverSettings.Port = Convert.ToInt32(Config.getProperty("ftrUrlPort"));
+            string pass = Config.getProperty("ftrUrlPassword");
+            
+            if (pass != null && pass.Length > 0) {
+               serverSettings.Password = pass;
+            }
 
             if (!ServiceChannelFactories.Initialize(serverSettings, false))
             {
@@ -105,8 +110,9 @@ namespace GuideEnricher
             }
 
          }
-         catch
+         catch (Exception ex) 
          {
+            Logger.Error("Error on starting service: {0}(1)", Environment.NewLine,ex.Message);
 
          }
          
