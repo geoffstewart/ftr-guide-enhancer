@@ -1,55 +1,195 @@
-﻿/*
- * Created by SharpDevelop.
- * User: geoff
- * Date: 06/10/2010
- * Time: 8:33 PM
- * 
- * To change this template use Tools | Options | Coding | Edit Standard Headers.
- */
-using System;
-using System.Collections;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Configuration;
+using System.Collections;
+using System.Collections.Specialized;
+using System.Diagnostics;
 
-namespace GuideEnricher
-{
-   /// <summary>
-   /// Description of Config.
-   /// </summary>
-   public class Config
+#region
+//*** Auxiliary Classes ***//
+namespace GuideEnricher {
+   public class SeriesNameMap : ConfigurationElement
    {
-      public Config()
+      // Create the element.
+      public SeriesNameMap()
+      { }
+      
+      // dummy constructor to make collection happy
+      public SeriesNameMap(string nothing) {
+         SchedulesDirectName = nothing;
+         TvdbComName = "invalid";
+      }
+
+      // Create the element.
+      public SeriesNameMap(string sdName,
+                           string tvdbName)
       {
-         
+         SchedulesDirectName = sdName;
+         TvdbComName = tvdbName;
       }
-      public static string getProperty(string propName) {
-         
-         //         string applicationName =
-         //         string exePath = System.IO.Path.Combine(
-         //               Environment.CurrentDirectory, applicationName);
-         //
-         //         System.Configuration.Configuration conf = ConfigurationManager.OpenExeConfiguration(exePath);
-         if ("TvDbLibCache".Equals(propName)) {
-            return "C:\\tvdblibcache\\";
+
+      [ConfigurationProperty("schedulesDirectName",
+                             DefaultValue = "",
+                             IsRequired = true)]
+      public string SchedulesDirectName
+      {
+         get
+         {
+            return (string)this["schedulesDirectName"];
          }
-         if ("serviceUrl".Equals(propName)) {
-            return "net.tcp://localhost:49830/GuideEnricher";
+         set
+         {
+            this["schedulesDirectName"] = value;
          }
-         return "";
       }
-      public static void setProperty(string propName, string propValue) {
+
+      [ConfigurationProperty("tvdbComName",
+                             DefaultValue = "",
+                             IsRequired = true)]
+      public string TvdbComName
+      {
+         get
+         {
+            return (string)this["tvdbComName"];
+         }
+         set
+         {
+            this["tvdbComName"] = value;
+         }
       }
       
-      public static IDictionary getMapProperty(string propName) {
-         Hashtable map = new Hashtable();
-         map.Add("American Dad","American Dad!");
-         
-         if ("TvDbSeriesMappings".Equals(propName)) {
-            return map;
+      protected override void DeserializeElement(
+         System.Xml.XmlReader reader,
+         bool serializeCollectionKey)
+      {
+         base.DeserializeElement(reader,
+                                 serializeCollectionKey);
+         // You can your custom processing code here.
+      }
+
+
+      protected override bool SerializeElement(
+         System.Xml.XmlWriter writer,
+         bool serializeCollectionKey)
+      {
+         bool ret = base.SerializeElement(writer,
+                                          serializeCollectionKey);
+         // You can enter your custom processing code here.
+         return ret;
+
+      }
+
+
+      protected override bool IsModified()
+      {
+         bool ret = base.IsModified();
+         // You can enter your custom processing code here.
+         return ret;
+      }
+
+   }
+
+   [ConfigurationCollection(typeof(SeriesNameMap), AddItemName = "seriesMap", CollectionType = ConfigurationElementCollectionType.BasicMap)]
+   public class SeriesNameMapCollection : ConfigurationElementCollection {
+      protected override ConfigurationElement CreateNewElement()
+      {
+         return new SeriesNameMap();
+      }
+
+      protected override object GetElementKey( ConfigurationElement element )
+      {
+         return ( (SeriesNameMap) element ).SchedulesDirectName;
+      }
+
+      public void Add( SeriesNameMap element )
+      {
+         BaseAdd( element );
+      }
+
+      public void Clear()
+      {
+         BaseClear();
+      }
+
+      public int IndexOf( SeriesNameMap element )
+      {
+         return BaseIndexOf( element );
+      }
+
+      public void Remove( SeriesNameMap element )
+      {
+         if( BaseIndexOf( element ) >= 0 )
+         {
+            BaseRemove( element.SchedulesDirectName );
          }
-         return new Hashtable();
       }
-      public static void setMapProperty(string propName, IDictionary propValues) {
+
+      public void RemoveAt( int index )
+      {
+         BaseRemoveAt( index );
+      }
+
+      public SeriesNameMap this[ int index ]
+      {
+         get { return (SeriesNameMap) BaseGet( index ); }
+         set
+         {
+            if( BaseGet( index ) != null )
+            {
+               BaseRemoveAt( index );
+            }
+            BaseAdd( index, value );
+         }
+      }
+
+   }
+
+
+   public class SeriesNameMapsSection : ConfigurationSection {
+      private static readonly ConfigurationProperty _propSeriesMap = new ConfigurationProperty(
+         null,
+         typeof(SeriesNameMapCollection),
+         null,
+         ConfigurationPropertyOptions.IsDefaultCollection
+        );
+
+      private static ConfigurationPropertyCollection _properties = new ConfigurationPropertyCollection();
+
+      static SeriesNameMapsSection()
+      {
+         _properties.Add( _propSeriesMap );
+      }
+
+      [ConfigurationProperty( "", Options = ConfigurationPropertyOptions.IsDefaultCollection )]
+      public SeriesNameMapCollection SeriesMapping
+      {
+         get { return (SeriesNameMapCollection) base[ _propSeriesMap ]; }
+      }
+
+   }
+
+   public class Config {
+      
+      public static string getProperty(string key) {
+         return ConfigurationManager.AppSettings[key];
          
       }
+      
+      public static Hashtable getSeriesNameMap() {
+         SeriesNameMapsSection mapSec = ConfigurationManager.GetSection("seriesMapping") as SeriesNameMapsSection;
+         
+         Hashtable map = new Hashtable();
+         
+         for (int i = 0; i < mapSec.SeriesMapping.Count; i++) {
+            map.Add(mapSec.SeriesMapping[i].SchedulesDirectName,
+                    mapSec.SeriesMapping[i].TvdbComName);
+            
+         }
+         return map;
+      }
+      
    }
 }
+#endregion
