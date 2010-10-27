@@ -1,0 +1,49 @@
+﻿<?xml version="1.0"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+   <Product Id="*"
+      Name="Guide Enricher"
+      Language="1033"
+      Version="0.1"
+      UpgradeCode="CE3B101C-2509-46EF-89F4-C9DE51AFCE42"
+      Manufacturer="Geoff Stewart">
+      <Package Description="#Description"
+         Comments="Comments"
+         InstallerVersion="200"
+         Compressed="yes"/>
+      <!--
+         Source media for the installation. 
+          Specifies a single cab file to be embedded in the installer's .msi. 
+      -->
+      <Media Id="1" Cabinet="contents.cab" EmbedCab="yes" CompressionLevel="high"/>
+      
+      <!-- Installation directory and files are defined in Files.wxs -->
+      <Directory Id="TARGETDIR" Name="SourceDir"/>
+      
+      <Feature Id="Complete"
+               Title="Guide Enricher Install"
+               Description="Main entry point for installer"
+               Level="1">
+               <ComponentRef Id="License"/>
+               <ComponentRef Id="ServiceExe"/>
+               <ComponentRef Id="ServiceExeConfig"/>
+               <ComponentRef Id="Tvdblibdll"/>
+               <ComponentRef Id="ftrdllclient"/>
+               <ComponentRef Id="ftrdllcommon"/>
+               <ComponentRef Id="ftrdllentities"/>
+               <ComponentRef Id="ftrdllserviceagents"/>
+               <ComponentRef Id="ftrdllservicecontracts"/>
+               <ComponentRef Id="serviceInstallComp"/>
+      
+      </Feature>
+      
+      <!-- 
+         Using the Wix UI library
+ 
+         WixUI_InstallDir does not allow the user to choose 
+         features but adds a dialog to let the user choose a 
+         directory where the product will be installed
+      -->
+      <Property Id="WIXUI_INSTALLDIR">INSTALLDIR</Property>
+      <UIRef Id="WixUI_InstallDir"/>
+   </Product>
+</Wix>
