@@ -1,0 +1,50 @@
+﻿<?xml version="1.0"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+   <Fragment>
+      <DirectoryRef Id="TARGETDIR">
+         <Directory Id="ProgramFilesFolder" Name="PFiles">
+            <Directory Id="INSTALLDIR" Name="Guide Enricher">
+               <Component Id="License" Guid="16ED3327-230C-4A7B-A593-6684E27D71FF" DiskId="1">
+                  <File Id="LicenseFile" Name="license.rtf" Source="license.rtf"/>
+               </Component>
+               
+               <Component Id="ServiceExe" Guid="BB06A3CF-236E-4612-B23D-671210C4270D" KeyPath="yes">
+                  <File Id="ServiceExe" Name="GuideEnricherService.exe" Source="dist\GuideEnricherService.exe"/>
+               </Component>
+               <Component Id="ServiceExeConfig" Guid="8A85871A-BAA0-424F-bFAA-D1CB576D8F74" KeyPath="yes">
+                  <File Id="ServiceExeConfig" Name="GuideEnricherService.exe.config" Source="dist\GuideEnricherService.exe.config"/>
+               </Component>
+               <Component Id="Tvdblibdll" Guid="0A2F94ED-4D4E-4E3B-82BE-4B936C96F6F7" KeyPath="yes">
+                  <File Id="Tvdblibdll" Name="TvdbLib.dll" Source="dist\TvdbLib.dll"/>
+               </Component>
+               <Component Id="ftrdllclient" Guid="68699CF2-2A86-4606-B1A6-4C2EF91A6DB1" KeyPath="yes">
+                  <File Id="ftrdllclient" Name="ForTheRecord.Client.Common.dll" Source="dist\ForTheRecord.Client.Common.dll"/>
+               </Component>
+               <Component Id="ftrdllcommon" Guid="6606920D-6497-4430-BD0D-89E5D5013DE7" KeyPath="yes">
+                  <File Id="ftrdllcommon" Name="ForTheRecord.Common.dll" Source="dist\ForTheRecord.Common.dll"/>
+               </Component>
+               <Component Id="ftrdllentities" Guid="5B049237-70E2-475C-8CBA-9B53C2DAA089" KeyPath="yes">
+                  <File Id="ftrdllentities" Name="ForTheRecord.Entities.dll" Source="dist\ForTheRecord.Entities.dll"/>
+               </Component>
+               <Component Id="ftrdllserviceagents" Guid="5B07DDCD-8DB5-44EB-BAEB-FABB632B8F4A" KeyPath="yes">
+                  <File Id="ftrdllserviceagents" Name="ForTheRecord.ServiceAgents.dll" Source="dist\ForTheRecord.ServiceAgents.dll"/>
+               </Component>
+               <Component Id="ftrdllservicecontracts" Guid="812DA23C-4FC0-4F8A-AD39-89EA0BBF9E48" KeyPath="yes">
+                  <File Id="ftrdllservicecontracts" Name="ForTheRecord.ServiceContracts.dll" Source="dist\ForTheRecord.ServiceContracts.dll"/>
+               </Component>
+               <Component Id="serviceInstallComp" Guid="Bf4B77CC-54F5-4EBB-B8C8-3A17A9186344" KeyPath="yes">
+                  <ServiceInstall Id="siInstall" Name="GuideEnricher"
+                                  Description="Service to add series and episode information to your ForTheRecord guide data."
+                                  Interactive="no" ErrorControl="ignore" Start="auto" Type="ownProcess">
+                  </ServiceInstall>
+                  
+                  <ServiceControl Id="siStart" Name="GuideEnricher" Start="install" />
+                  <ServiceControl Id="siStop" Name="GuideEnricher" Start="uninstall" />
+               
+               </Component>
+            
+            </Directory>
+         </Directory>
+      </DirectoryRef>
+   </Fragment>
+</Wix>

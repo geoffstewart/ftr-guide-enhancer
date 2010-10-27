@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuideEnricherService", "Gui
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigTool", "ConfigTool\ConfigTool.csproj", "{D344EB44-2423-411C-9324-8226616D5DE5}"
 EndProject
+Project("{CFEE4113-1246-4D54-95CB-156813CB8593}") = "Installer", "Installer\Installer.wixproj", "{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -20,5 +22,9 @@ Global
 		{D344EB44-2423-411C-9324-8226616D5DE5}.Debug|x86.ActiveCfg = Debug|x86
 		{D344EB44-2423-411C-9324-8226616D5DE5}.Release|x86.Build.0 = Release|x86
 		{D344EB44-2423-411C-9324-8226616D5DE5}.Release|x86.ActiveCfg = Release|x86
+		{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}.Debug|x86.Build.0 = Debug|x86
+		{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}.Debug|x86.ActiveCfg = Debug|x86
+		{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}.Release|x86.Build.0 = Release|x86
+		{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}.Release|x86.ActiveCfg = Release|x86
 	EndGlobalSection
 EndGlobal
