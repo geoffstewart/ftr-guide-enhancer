@@ -8,8 +8,21 @@
                   <File Id="LicenseFile" Name="license.rtf" Source="license.rtf"/>
                </Component>
                
-               <Component Id="ServiceExe" Guid="BB06A3CF-236E-4612-B23D-671210C4270D" KeyPath="yes">
-                  <File Id="ServiceExe" Name="GuideEnricherService.exe" Source="dist\GuideEnricherService.exe"/>
+               <Component Id="ServiceExe" Guid="BB06A3CF-236E-4612-B23D-671210C4270D">
+                  <File Id="ServiceExe" Name="GuideEnricherService.exe" Source="dist\GuideEnricherService.exe" KeyPath="yes"/>
+                  <ServiceInstall Id="ServiceExeInstall"
+                                  Name="GuideEnricher" 
+                                  Description="Service to add series and episode information to your ForTheRecord guide data."
+                                  ErrorControl="normal"
+                                  Start="auto" 
+                                  Type="ownProcess" />
+                  <ServiceControl Id="ServiceExeStart" 
+                                  Name="GuideEnricher" 
+                                  Start="install" 
+                                  Stop="both" 
+                                  Remove="uninstall" 
+                                  Wait="yes"/>
+               
                </Component>
                <Component Id="ServiceExeConfig" Guid="8A85871A-BAA0-424F-bFAA-D1CB576D8F74" KeyPath="yes">
                   <File Id="ServiceExeConfig" Name="GuideEnricherService.exe.config" Source="dist\GuideEnricherService.exe.config"/>
@@ -31,16 +44,6 @@
                </Component>
                <Component Id="ftrdllservicecontracts" Guid="812DA23C-4FC0-4F8A-AD39-89EA0BBF9E48" KeyPath="yes">
                   <File Id="ftrdllservicecontracts" Name="ForTheRecord.ServiceContracts.dll" Source="dist\ForTheRecord.ServiceContracts.dll"/>
-               </Component>
-               <Component Id="serviceInstallComp" Guid="Bf4B77CC-54F5-4EBB-B8C8-3A17A9186344" KeyPath="yes">
-                  <ServiceInstall Id="siInstall" Name="GuideEnricher"
-                                  Description="Service to add series and episode information to your ForTheRecord guide data."
-                                  Interactive="no" ErrorControl="ignore" Start="auto" Type="ownProcess">
-                  </ServiceInstall>
-                  
-                  <ServiceControl Id="siStart" Name="GuideEnricher" Start="install" />
-                  <ServiceControl Id="siStop" Name="GuideEnricher" Start="uninstall" />
-               
                </Component>
             
             </Directory>
