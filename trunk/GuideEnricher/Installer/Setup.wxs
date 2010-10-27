@@ -32,7 +32,6 @@
                <ComponentRef Id="ftrdllentities"/>
                <ComponentRef Id="ftrdllserviceagents"/>
                <ComponentRef Id="ftrdllservicecontracts"/>
-               <ComponentRef Id="serviceInstallComp"/>
       
       </Feature>
       
