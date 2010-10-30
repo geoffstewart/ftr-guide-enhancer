@@ -107,6 +107,13 @@ namespace GuideEnricher
                   Logger.Error("Error on creating ServiceHost:{0}{1}", Environment.NewLine, ex.Message);
                }
                
+               // verify it's listening
+               
+               using (ForTheRecordServiceAgent agent = new ForTheRecordServiceAgent()) {
+                  ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents;
+                  agent.EnsureEventListener(eventGroupsToListenTo, Config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
+
+               }
             }
 
          }
