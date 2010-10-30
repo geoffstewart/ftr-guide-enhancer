@@ -38,7 +38,7 @@ namespace GuideEnricher
       public static ServiceHost CreateServiceHost(string eventsServiceBaseUrl)
       {
          ServiceHost sh = CreateServiceHost(typeof(ForTheRecordListener), eventsServiceBaseUrl, typeof(IGuideEventsListener),
-                                            typeof(IScheduleEventsListener));
+                typeof(IRecordingEventsListener), typeof(IScheduleEventsListener), typeof(ISystemEventsListener));
          
          return sh;
       }

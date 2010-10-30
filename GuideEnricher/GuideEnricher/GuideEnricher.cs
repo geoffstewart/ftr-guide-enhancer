@@ -68,7 +68,7 @@ namespace GuideEnricher
       /// </summary>
       protected override void OnStart(string[] args)
       {
-//         Thread.Sleep(10000);
+         Thread.Sleep(10000);
          
          try
          {
@@ -110,7 +110,7 @@ namespace GuideEnricher
                // verify it's listening
                
                using (ForTheRecordServiceAgent agent = new ForTheRecordServiceAgent()) {
-                  ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents;
+                  ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents | ForTheRecordEventGroup.GuideEvents;
                   agent.EnsureEventListener(eventGroupsToListenTo, Config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
 
                }
@@ -166,6 +166,8 @@ namespace GuideEnricher
                upcomingRecs = tcsa.GetAllUpcomingRecordings(UpcomingRecordingsFilter.Recordings,false);
             }
             
+            ftrlog("Starting process to enrich guide data.  Processing " + Convert.ToString(upcomingRecs.Length) + " upcoming shows");
+            
             Logger.Info("{0}: Starting the process to enrich guide data.  Processing {1} upcoming shows",
                         MODULE, Convert.ToString(upcomingRecs.Length));
             
@@ -202,6 +204,8 @@ namespace GuideEnricher
                using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
                   Logger.Info("{0}: About to commit enriched guide data. {1} entries were enriched",
                               MODULE, Convert.ToString(enrichedPrograms.Count));
+                  ftrlog("About to commit enriched guide data.  " + Convert.ToString(enrichedPrograms.Count) +
+                     " entries were enriched.");
                   GuideProgram[] progArray = new GuideProgram[enrichedPrograms.Count];
                   for (int i = 0; i < enrichedPrograms.Count; i++) {
                      progArray[i] = (GuideProgram)enrichedPrograms[i];
@@ -209,17 +213,23 @@ namespace GuideEnricher
                   tgsa.ImportPrograms(progArray, GuideSource.XmlTv);
                }
             } else {
+               ftrlog("No programs were enriched");
                Logger.Info("{0}: No programs were enriched.",
                            MODULE);
             }
             
             Logger.Info("{0}: Done enriching guide data", MODULE);
-            
+            ftrlog("Done enriching guide data");
 
             
          }
       }
 
+      public static void ftrlog(string message) {
+         using (ForTheRecord.ServiceAgents.LogServiceAgent logAgent = new LogServiceAgent()) {
+            logAgent.LogMessage("GuideEnricher",LogSeverity.Information,message);
+         }
+      }
       
    }
  
