@@ -38,6 +38,8 @@ namespace GuideEnricher
       
       private Thread worker = null;
       
+      private Thread sleeper = null;
+      
       private bool workerLoop = true;
       
       public GuideEnricher()
@@ -51,6 +53,7 @@ namespace GuideEnricher
          
          worker = new Thread(enrichGuideData);
 
+         sleeper = new Thread(enrichTimer);
          
       }
       
@@ -68,7 +71,7 @@ namespace GuideEnricher
       /// </summary>
       protected override void OnStart(string[] args)
       {
-         Thread.Sleep(10000);
+//         Thread.Sleep(10000);
          
          try
          {
@@ -123,9 +126,11 @@ namespace GuideEnricher
 
          }
          
+         ftrlog("Starting GuideEnricher...");
+         
          // start worker thread
          worker.Start();
-         
+         sleeper.Start();
       }
       
       /// <summary>
@@ -136,6 +141,8 @@ namespace GuideEnricher
          Logger.Info("Ending the worker thread...");
          workerLoop = false;
          waitHandle.Set();
+         sleeper.Abort();
+         ftrlog("Stopping the GuideEnricher");
          
       }
       
@@ -184,11 +191,38 @@ namespace GuideEnricher
                   // enrich program
                   try {
                      string oldEpisodeNumber = prog.EpisodeNumberDisplay;
-                     IProgramSummary updatedProgram = de.enrichProgram(prog);
+                     GuideProgram updatedProgram = (GuideProgram)de.enrichProgram(prog);
                      
-                     if (!prog.EpisodeNumberDisplay.Equals(oldEpisodeNumber)) {
+                     // temporarily update the series/episode number fields too
+                     try {
+                        string sep = prog.EpisodeNumberDisplay;
+                        int epInt = Convert.ToInt32(sep.Substring(4));
+                        int seasonInt = Convert.ToInt32(sep.Substring(1,2));
+                        updatedProgram.EpisodeNumber = epInt;
+                        updatedProgram.SeriesNumber = seasonInt;
+                     } catch (Exception ex) {
+                        // couldn't convert ep nunmber to ints
+                        Logger.Error("Error while converting season/ep to integers: {0}",ex.Message);
+                     }
+                     
+                     if (!prog.EpisodeNumberDisplay.Equals(oldEpisodeNumber)  ||
+                         prog.EpisodeNumber != updatedProgram.EpisodeNumber ||
+                         prog.SeriesNumber != updatedProgram.SeriesNumber) {
                         // program was actually enriched
                         prog.EpisodeNumberDisplay = updatedProgram.EpisodeNumberDisplay;
+                        
+                        // temporarily update the series/episode number fields too
+                        try {
+                           string sep = prog.EpisodeNumberDisplay;
+                           int epInt = Convert.ToInt32(sep.Substring(4));
+                           int seasonInt = Convert.ToInt32(sep.Substring(1,2));
+                           prog.EpisodeNumber = epInt;
+                           prog.SeriesNumber = seasonInt;
+                        } catch (Exception ex) {
+                           // couldn't convert ep nunmber to ints
+                           Logger.Error("Error while converting season/ep to integers: {0}",ex.Message);
+                        }
+                        
                         enrichedPrograms.Add(prog);
                      }
                   } catch (Exception ex) {
@@ -228,6 +262,27 @@ namespace GuideEnricher
       public static void ftrlog(string message) {
          using (ForTheRecord.ServiceAgents.LogServiceAgent logAgent = new LogServiceAgent()) {
             logAgent.LogMessage("GuideEnricher",LogSeverity.Information,message);
+         }
+      }
+      
+      public void enrichTimer() {
+         string waittime = Config.getProperty("sleepTimeInHours");
+         if (waittime == null) {
+            waittime = "12";
+         }
+         if ("0".Equals(waittime)) {
+            // sleeper thread is disabled
+            ftrlog("Sleeper thread is disabled");
+            return;
+         }
+         int waittimeHoursInt = Convert.ToInt32(waittime);
+         int waittimeInt = waittimeHoursInt * 60 * 60 * 1000;
+         
+         while(workerLoop) {
+            ftrlog("The wait thread will wait for " + waittime + " hours");
+            Thread.Sleep(waittimeInt);
+            ftrlog("Wait thread is awake and calling enrichGuideData...");
+            waitHandle.Set();
          }
       }
       
