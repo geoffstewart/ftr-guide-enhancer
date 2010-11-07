@@ -15,7 +15,9 @@
                                   Description="Service to add series and episode information to your ForTheRecord guide data."
                                   ErrorControl="normal"
                                   Start="auto" 
-                                  Type="ownProcess" />
+                                  Type="ownProcess">
+                     <ServiceDependency Group="no" Id="ForTheRecordServices" />
+                  </ServiceInstall>
                   <ServiceControl Id="ServiceExeStart" 
                                   Name="GuideEnricher" 
                                   Start="install" 
@@ -24,8 +26,11 @@
                                   Wait="yes"/>
                
                </Component>
-               <Component Id="ServiceExeConfig" Guid="8A85871A-BAA0-424F-bFAA-D1CB576D8F74" KeyPath="yes">
+               <Component Id="ServiceExeConfig" Guid="8A85871A-BAA0-424F-bFAA-D1CB576D8F74" KeyPath="yes" NeverOverwrite="yes" Permanent="yes">
                   <File Id="ServiceExeConfig" Name="GuideEnricherService.exe.config" Source="dist\GuideEnricherService.exe.config"/>
+               </Component>
+               <Component Id="ServiceExeConfigExample" Guid="38f6CFCB-F8AE-44DD-8A44-AFF018F507F3" KeyPath="yes">
+                  <File Id="ServiceExeConfigExample" Name="GuideEnricherService.exe.config.example" Source="dist\GuideEnricherService.exe.config"/>
                </Component>
                <Component Id="Tvdblibdll" Guid="0A2F94ED-4D4E-4E3B-82BE-4B936C96F6F7" KeyPath="yes">
                   <File Id="Tvdblibdll" Name="TvdbLib.dll" Source="dist\TvdbLib.dll"/>

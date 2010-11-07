@@ -196,13 +196,15 @@ namespace GuideEnricher
                      // temporarily update the series/episode number fields too
                      try {
                         string sep = prog.EpisodeNumberDisplay;
-                        int epInt = Convert.ToInt32(sep.Substring(4));
-                        int seasonInt = Convert.ToInt32(sep.Substring(1,2));
-                        updatedProgram.EpisodeNumber = epInt;
-                        updatedProgram.SeriesNumber = seasonInt;
+                        if (sep.Length == 6) {
+                           int epInt = Convert.ToInt32(sep.Substring(4));
+                           int seasonInt = Convert.ToInt32(sep.Substring(1,2));
+                           updatedProgram.EpisodeNumber = epInt;
+                           updatedProgram.SeriesNumber = seasonInt;
+                        }
                      } catch (Exception ex) {
                         // couldn't convert ep nunmber to ints
-                        Logger.Error("Error while converting season/ep to integers: {0}",ex.Message);
+                        Logger.Warning("Error while converting season/ep to integers: {0}",ex.Message);
                      }
                      
                      if (!prog.EpisodeNumberDisplay.Equals(oldEpisodeNumber)  ||
@@ -214,19 +216,21 @@ namespace GuideEnricher
                         // temporarily update the series/episode number fields too
                         try {
                            string sep = prog.EpisodeNumberDisplay;
-                           int epInt = Convert.ToInt32(sep.Substring(4));
-                           int seasonInt = Convert.ToInt32(sep.Substring(1,2));
-                           prog.EpisodeNumber = epInt;
-                           prog.SeriesNumber = seasonInt;
+                           if (sep.Length == 6) {
+                              int epInt = Convert.ToInt32(sep.Substring(4));
+                              int seasonInt = Convert.ToInt32(sep.Substring(1,2));
+                              prog.EpisodeNumber = epInt;
+                              prog.SeriesNumber = seasonInt;
+                           }
                         } catch (Exception ex) {
                            // couldn't convert ep nunmber to ints
-                           Logger.Error("Error while converting season/ep to integers: {0}",ex.Message);
+                           Logger.Warning("Error while converting season/ep to integers: {0}",ex.Message);
                         }
                         
                         enrichedPrograms.Add(prog);
                      }
                   } catch (Exception ex) {
-                     Logger.Error("Error enriching program: {0}",ex.Message);
+                     Logger.Warning("Error enriching program: {0}",ex.Message);
                   }
 
 
