@@ -253,7 +253,7 @@ namespace GuideEnricher.tvdb
             return getSeasonEpisode(seriesName,seriesId,episodeName,allowTailMatch,true);
          }
          
-         Logger.Error("SD-TvDb: No episode match for series: {0}, seriesId: {1}, episodeName: {2}",seriesName,seriesId,episodeName);
+         Logger.Warning("No episode match for series: {0}, seriesId: {1}, episodeName: {2}",seriesName,seriesId,episodeName);
          // still can't match.. return nothing
          return "";
       }

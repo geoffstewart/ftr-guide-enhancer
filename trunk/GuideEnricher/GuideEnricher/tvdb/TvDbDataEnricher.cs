@@ -41,7 +41,7 @@ namespace GuideEnricher.tvdb
          string seriesId = tvdblib.getSeriesId(seriesName);
          
          if (seriesId.Length == 0) {
-            Logger.Error("{0}: Cannot find series ID for {1}", MODULE, seriesName);
+            Logger.Warning("{0}: Cannot find series ID for {1}", MODULE, seriesName);
             return retProgram;
          }
          

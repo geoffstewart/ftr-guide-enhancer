@@ -3,7 +3,7 @@
    <Product Id="*"
       Name="Guide Enricher"
       Language="1033"
-      Version="0.3"
+      Version="0.4"
       UpgradeCode="CE3B101C-2509-46EF-89F4-C9DE51AFCE42"
       Manufacturer="Geoff Stewart">
       <Package Description="#Description"
@@ -26,6 +26,7 @@
                <ComponentRef Id="License"/>
                <ComponentRef Id="ServiceExe"/>
                <ComponentRef Id="ServiceExeConfig"/>
+               <ComponentRef Id="ServiceExeConfigExample"/>
                <ComponentRef Id="Tvdblibdll"/>
                <ComponentRef Id="ftrdllclient"/>
                <ComponentRef Id="ftrdllcommon"/>
@@ -44,5 +45,16 @@
       -->
       <Property Id="WIXUI_INSTALLDIR">INSTALLDIR</Property>
       <UIRef Id="WixUI_InstallDir"/>
+
+      
+      <Upgrade Id="63C6AE4C-7503-4665-AC08-2DFF7CA464EB">
+        <UpgradeVersion OnlyDetect="no" Minimum="0.1" Property="NEWFILES">
+         
+        </UpgradeVersion>
+      </Upgrade>
+   
+      <InstallExecuteSequence>
+         <RemoveExistingProducts Before="InstallInitialize"/>
+      </InstallExecuteSequence>
    </Product>
 </Wix>

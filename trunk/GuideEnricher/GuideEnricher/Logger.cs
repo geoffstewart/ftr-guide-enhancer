@@ -4,6 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
+using ForTheRecord.ServiceAgents;
+using ForTheRecord.ServiceContracts;
+using ForTheRecord.Entities;
+using ForTheRecord.Client.Common;
+
 namespace GuideEnricher
 {
     [Flags]
@@ -40,6 +45,10 @@ namespace GuideEnricher
             // throws an exception about a missing dll 
             //ForTheRecord.Common.Logging.Logger.Info(message, args);
             WriteEventLog(string.Format(message, args), LogType.Warning);
+            using (ForTheRecord.ServiceAgents.LogServiceAgent logAgent = new LogServiceAgent()) {
+               
+               logAgent.LogMessage("GuideEnricher",LogSeverity.Warning,string.Format(message,args));
+            }
         }
 
         public static void Error(string message, params string[] args)
@@ -47,6 +56,9 @@ namespace GuideEnricher
             // throws an exception about a missing dll 
             //ForTheRecord.Common.Logging.Logger.Info(message, args);
             WriteEventLog(string.Format(message, args), LogType.Error);
+            using (ForTheRecord.ServiceAgents.LogServiceAgent logAgent = new LogServiceAgent()) {
+               logAgent.LogMessage("GuideEnricher",LogSeverity.Error,string.Format(message,args));
+            }
         }
 
         private static void WriteEventLog(string message, LogType logType)
