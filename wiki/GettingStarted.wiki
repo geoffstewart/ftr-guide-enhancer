@@ -9,7 +9,7 @@ If you are going to test the Guide Enricher, follow these steps.
   *  Make sure you have ForTheRecord installed and running
   *  Run the Guide Enricher installer
     *  Only option is path where to install it... 
-  *  After a successful install (hopefully), you will have a windows service called GuideEnricher running.
+  *  After a successful install (hopefully), you will have a windows service called GuideEnricher available (on versions higher than 0.5, the install does not start the service).
   *  Logs are put into the Windows logging system.  You can view them by doing the following:
     *  right-click on my computer
     *  Manage
