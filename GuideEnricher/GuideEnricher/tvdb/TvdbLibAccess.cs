@@ -8,6 +8,7 @@
  */
 using System;
 using System.Text;
+using System.Text.RegularExpressions;
 using TvdbLib;
 using TvdbLib.Cache;
 using TvdbLib.Data;
@@ -24,6 +25,7 @@ namespace GuideEnricher.tvdb
       private TvdbHandler tvdbHandler;
       private Hashtable seriesNameMapping = new Hashtable();
       private List<string> seriesExplicit = new List<string>();
+      private Hashtable seriesNameRegex = new Hashtable();
       
       public TvdbLibAccess()
       {
@@ -37,6 +39,13 @@ namespace GuideEnricher.tvdb
          tvdbHandler.InitCache();
          
          seriesNameMapping = (Hashtable)Config.getSeriesNameMap();
+         
+         // initialize any regex mappings
+         foreach(string regex in seriesNameMapping.Keys) {
+            if (regex.StartsWith("regex=")) {
+               this.seriesNameRegex.Add(regex,seriesNameMapping[regex]);
+            }
+         }
       }
       
       public void closeCache() {
@@ -46,13 +55,25 @@ namespace GuideEnricher.tvdb
       public string getSeriesId(string seriesName) {
          string searchSeries = seriesName;
          if (seriesNameMapping.Contains(seriesName)) {
-            if (((string)seriesNameMapping[seriesName]).StartsWith("id=")) {
-               // we're doing a direct mapping from series to tvdb.com id
-               string seriesid = ((string)seriesNameMapping[seriesName]).Substring(3);
-               Logger.Verbose("SD-TvDb: Direct mapping: series: " + searchSeries + "  id: " + seriesid);
-               return seriesid;
-            }
             searchSeries = (string)seriesNameMapping[seriesName];
+         } else if (this.seriesNameRegex.Count > 0) {
+            // compare the incoming seriesName to see if it matches a regex mapping
+            foreach (string regexEntry in seriesNameRegex.Keys) {
+               // get rid of regex=
+               string regex = regexEntry.Substring(6);
+               Regex re = new Regex(regex);
+               if (re.IsMatch(seriesName)) {
+                  searchSeries = (string)seriesNameRegex[regexEntry];
+                  Logger.Verbose("SD-TvDb: Regex mapping: series: " + seriesName + "  regex: " + regex + "  seriesMatch: " + searchSeries);
+                  break;
+               }
+            }
+         }
+         if (searchSeries.StartsWith("id=")) {
+            // we're doing a direct mapping from series to tvdb.com id
+            string seriesid = searchSeries.Substring(3);
+            Logger.Verbose("SD-TvDb: Direct mapping: series: " + seriesName + "  id: " + seriesid);
+            return seriesid;
          }
          List<TvdbSearchResult> l = tvdbHandler.SearchSeries(searchSeries);
 

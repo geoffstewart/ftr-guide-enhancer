@@ -19,11 +19,10 @@
                      <ServiceDependency Group="no" Id="ForTheRecordServices" />
                   </ServiceInstall>
                   <ServiceControl Id="ServiceExeStart" 
-                                  Name="GuideEnricher" 
-                                  Start="install" 
+                                  Name="GuideEnricher"
                                   Stop="both" 
                                   Remove="uninstall" 
-                                  Wait="yes"/>
+                                  Wait="yes" />
                
                </Component>
                <Component Id="ServiceExeConfig" Guid="8A85871A-BAA0-424F-bFAA-D1CB576D8F74" KeyPath="yes" NeverOverwrite="yes" Permanent="yes">
