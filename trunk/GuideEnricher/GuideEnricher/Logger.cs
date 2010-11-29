@@ -57,7 +57,7 @@ namespace GuideEnricher
             //ForTheRecord.Common.Logging.Logger.Info(message, args);
             WriteEventLog(string.Format(message, args), LogType.Error);
             using (ForTheRecord.ServiceAgents.LogServiceAgent logAgent = new LogServiceAgent()) {
-               logAgent.LogMessage("GuideEnricher",LogSeverity.Error,string.Format(message,args));
+               logAgent.LogMessage("GuideEnricher",LogSeverity.Warning,string.Format(message,args));
             }
         }
 
