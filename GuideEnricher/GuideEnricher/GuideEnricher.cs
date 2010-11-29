@@ -85,6 +85,8 @@ namespace GuideEnricher
                serverSettings.Password = pass;
             }
 
+            Logger.Info("Just about to call ServiceChannelFactories.Initialize()");
+            
             if (!ServiceChannelFactories.Initialize(serverSettings, false))
             {
                Logger.Info("Unable to connect to ForTheRecordService, check your settings.");
