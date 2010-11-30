@@ -3,7 +3,7 @@
    <Product Id="*"
       Name="Guide Enricher"
       Language="1033"
-      Version="0.4"
+      Version="0.7"
       UpgradeCode="CE3B101C-2509-46EF-89F4-C9DE51AFCE42"
       Manufacturer="Geoff Stewart">
       <Package Description="#Description"

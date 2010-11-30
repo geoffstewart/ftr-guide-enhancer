@@ -43,6 +43,9 @@ namespace GuideEnricher.tvdb
          if (seriesId.Length == 0) {
             Logger.Warning("{0}: Cannot find series ID for {1}", MODULE, seriesName);
             return retProgram;
+         } else if (seriesId.Equals(TvdbLibAccess.IGNORED)) {
+            Logger.Verbose("{0}: Series {1} is ignored", MODULE, seriesName);
+            return retProgram;
          }
          
          string episodeNumber = tvdblib.getSeasonEpisode(seriesName, seriesId, episodeName, true);
