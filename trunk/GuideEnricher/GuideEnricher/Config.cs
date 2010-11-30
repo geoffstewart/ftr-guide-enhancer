@@ -20,6 +20,7 @@ namespace GuideEnricher {
       public SeriesNameMap(string nothing) {
          SchedulesDirectName = nothing;
          TvdbComName = "invalid";
+         Ignore = false;
       }
 
       // Create the element.
@@ -28,6 +29,7 @@ namespace GuideEnricher {
       {
          SchedulesDirectName = sdName;
          TvdbComName = tvdbName;
+         Ignore = false;
       }
 
       [ConfigurationProperty("schedulesDirectName",
@@ -57,6 +59,21 @@ namespace GuideEnricher {
          set
          {
             this["tvdbComName"] = value;
+         }
+      }
+      
+      [ConfigurationProperty("ignore",
+                             DefaultValue = "false",
+                             IsRequired = false)]
+      public bool Ignore
+      {
+         get
+         {
+            return (bool)this["ignore"];
+         }
+         set
+         {
+            this["ignore"] = value;
          }
       }
       
@@ -188,6 +205,19 @@ namespace GuideEnricher {
             
          }
          return map;
+      }
+      
+      public static List<string> getIgnoredSeries() {
+         SeriesNameMapsSection mapSec = ConfigurationManager.GetSection("seriesMapping") as SeriesNameMapsSection;
+         
+         List<string> l = new List<string>();
+         
+         for (int i = 0; i < mapSec.SeriesMapping.Count; i++) {
+            if (mapSec.SeriesMapping[i].Ignore) {
+               l.Add(mapSec.SeriesMapping[i].SchedulesDirectName);
+            }
+         }
+         return l;
       }
       
    }

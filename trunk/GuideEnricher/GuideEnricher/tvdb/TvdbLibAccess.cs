@@ -26,6 +26,9 @@ namespace GuideEnricher.tvdb
       private Hashtable seriesNameMapping = new Hashtable();
       private List<string> seriesExplicit = new List<string>();
       private Hashtable seriesNameRegex = new Hashtable();
+      private List<string> seriesIgnore = new List<string>();
+      
+      public static string IGNORED = "-IGNORED-"; // not likely a series will be called this
       
       public TvdbLibAccess()
       {
@@ -39,6 +42,7 @@ namespace GuideEnricher.tvdb
          tvdbHandler.InitCache();
          
          seriesNameMapping = (Hashtable)Config.getSeriesNameMap();
+         seriesIgnore = Config.getIgnoredSeries();
          
          // initialize any regex mappings
          foreach(string regex in seriesNameMapping.Keys) {
@@ -53,8 +57,12 @@ namespace GuideEnricher.tvdb
       }
       
       public string getSeriesId(string seriesName) {
+         
          string searchSeries = seriesName;
          if (seriesNameMapping.Contains(seriesName)) {
+            if (this.seriesIgnore.Contains(seriesName)) {
+               return IGNORED;
+            }
             searchSeries = (string)seriesNameMapping[seriesName];
          } else if (this.seriesNameRegex.Count > 0) {
             // compare the incoming seriesName to see if it matches a regex mapping
@@ -63,6 +71,9 @@ namespace GuideEnricher.tvdb
                string regex = regexEntry.Substring(6);
                Regex re = new Regex(regex);
                if (re.IsMatch(seriesName)) {
+                  if (this.seriesIgnore.Contains(regexEntry)) {
+                     return IGNORED;
+                  }
                   searchSeries = (string)seriesNameRegex[regexEntry];
                   Logger.Verbose("SD-TvDb: Regex mapping: series: " + seriesName + "  regex: " + regex + "  seriesMatch: " + searchSeries);
                   break;
