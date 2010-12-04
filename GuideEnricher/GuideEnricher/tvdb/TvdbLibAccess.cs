@@ -27,6 +27,8 @@ namespace GuideEnricher.tvdb
       private List<string> seriesExplicit = new List<string>();
       private Hashtable seriesNameRegex = new Hashtable();
       private List<string> seriesIgnore = new List<string>();
+
+      private TvdbLanguage language = TvdbLanguage.DefaultLanguage;
       
       public static string IGNORED = "-IGNORED-"; // not likely a series will be called this
       
@@ -43,7 +45,23 @@ namespace GuideEnricher.tvdb
          
          seriesNameMapping = (Hashtable)Config.getSeriesNameMap();
          seriesIgnore = Config.getIgnoredSeries();
-         
+
+         #region choose language according to value in config
+         List<TvdbLanguage> m_languages = tvdbHandler.Languages;
+         string langInConfig = Config.getProperty("TvDbLanguage");
+         // if there is a value for TvDbLanguage in the settings, set the right language
+         if (langInConfig != null && langInConfig != "")
+         {
+             TvdbLanguage lang = m_languages.Find(delegate(TvdbLanguage l)
+               {
+                   return l.Abbriviation == langInConfig;
+               }
+             );
+             if (lang != null) language = lang;
+             Logger.Verbose("Language: {0}", language.Abbriviation);
+         }
+         #endregion
+
          // initialize any regex mappings
          foreach(string regex in seriesNameMapping.Keys) {
             if (regex.StartsWith("regex=")) {
@@ -115,7 +133,7 @@ namespace GuideEnricher.tvdb
          if (seriesId == null || seriesId.Length == 0) {
             return "";
          }
-         TvdbSeries s = tvdbHandler.GetSeries(Convert.ToInt32(seriesId),TvdbLanguage.DefaultLanguage,true,false,false);
+         TvdbSeries s = tvdbHandler.GetSeries(Convert.ToInt32(seriesId), language, true, false, false);
          List<TvdbEpisode> el = s.Episodes;
          
          foreach (TvdbEpisode e in el) {
@@ -279,7 +297,7 @@ namespace GuideEnricher.tvdb
          
         
          if (!recurseCall) {
-            TvdbSeries tvdbSeries = this.tvdbHandler.GetFullSeries(Convert.ToInt32(seriesId),TvdbLanguage.DefaultLanguage,false);
+             TvdbSeries tvdbSeries = this.tvdbHandler.GetFullSeries(Convert.ToInt32(seriesId), language, false);
             
             this.tvdbHandler.ForceReload(tvdbSeries,true,true,false);
             return getSeasonEpisode(seriesName,seriesId,episodeName,allowTailMatch,true);
