@@ -23,6 +23,8 @@ using ForTheRecord.ServiceContracts;
 using ForTheRecord.Entities;
 using ForTheRecord.Client.Common;
 
+using GuideEnricher.exception;
+
 namespace GuideEnricher
 {
    /**
@@ -156,7 +158,7 @@ namespace GuideEnricher
        */
       
       public void enrichGuideData() {
-         IDataEnricher de = DataEnricherFactory.Instance.getGuideDataEnricher();
+         
          
          while (workerLoop) {
             
@@ -169,7 +171,7 @@ namespace GuideEnricher
             }
             
             UpcomingRecording[] upcomingRecs = null;
-            ArrayList enrichedPrograms = new ArrayList();
+            Hashtable enrichedPrograms = new Hashtable();
             
             using (TvControlServiceAgent tcsa = new TvControlServiceAgent()) {
                upcomingRecs = tcsa.GetAllUpcomingRecordings(UpcomingRecordingsFilter.Recordings,false);
@@ -179,6 +181,11 @@ namespace GuideEnricher
             
             Logger.Info("{0}: Starting the process to enrich guide data.  Processing {1} upcoming shows",
                         MODULE, Convert.ToString(upcomingRecs.Length));
+            
+            // lists to keep track of failed searches for series and episodes
+            // use these to prevent repeated searches that you know will fail
+            ArrayList noSeriesMatchList = new ArrayList();
+            ArrayList noEpisodeMatchList = new ArrayList();
             
             for (int i = 0; i < upcomingRecs.Length; i++) {
                UpcomingProgram upProg = upcomingRecs[i].Program;
@@ -190,49 +197,69 @@ namespace GuideEnricher
                      prog = tgsa.GetProgramById((Guid)upProg.GuideProgramId);
                   }
 
-                  // enrich program
                   try {
-                     string oldEpisodeNumber = prog.EpisodeNumberDisplay;
-                     GuideProgram updatedProgram = (GuideProgram)de.enrichProgram(prog);
-                     
-                     // temporarily update the series/episode number fields too
-                     try {
-                        string sep = prog.EpisodeNumberDisplay;
-                        if (sep.Length == 6) {
-                           int epInt = Convert.ToInt32(sep.Substring(4));
-                           int seasonInt = Convert.ToInt32(sep.Substring(1,2));
-                           updatedProgram.EpisodeNumber = epInt;
-                           updatedProgram.SeriesNumber = seasonInt;
-                        }
-                     } catch (Exception ex) {
-                        // couldn't convert ep nunmber to ints
-                        Logger.Warning("Error while converting season/ep to integers: {0}",ex.Message);
+                     if (noSeriesMatchList.Contains(prog.Title) ||
+                         noEpisodeMatchList.Contains(prog.Title + "-" + prog.SubTitle)) {
+                        // already failed on this, skip it=
+                        continue;
                      }
+                       
+                     prog = enrichProgram(prog);
                      
-                     if (!prog.EpisodeNumberDisplay.Equals(oldEpisodeNumber)  ||
-                         prog.EpisodeNumber != updatedProgram.EpisodeNumber ||
-                         prog.SeriesNumber != updatedProgram.SeriesNumber) {
-                        // program was actually enriched
-                        prog.EpisodeNumberDisplay = updatedProgram.EpisodeNumberDisplay;
-                        
-                        // temporarily update the series/episode number fields too
-                        try {
-                           string sep = prog.EpisodeNumberDisplay;
-                           if (sep.Length == 6) {
-                              int epInt = Convert.ToInt32(sep.Substring(4));
-                              int seasonInt = Convert.ToInt32(sep.Substring(1,2));
-                              prog.EpisodeNumber = epInt;
-                              prog.SeriesNumber = seasonInt;
+                  } catch (NoSeriesMatchException) {
+                     noSeriesMatchList.Add(prog.Title);
+                     prog = null;
+                  } catch (NoEpisodeMatchException) {
+                     noEpisodeMatchList.Add(prog.Title + "-" + prog.SubTitle);
+                     prog = null;
+                  } catch (DataEnricherException) {
+                     prog = null;
+                     // ignore other types for now
+                  }
+                  
+                  if (prog != null) {
+                     enrichedPrograms = addToEnrichedPrograms(enrichedPrograms, prog);
+                     
+                     // find other programs that are part of this schedule and enrich them
+                     // too so they have the same episode information
+                     // otherwise, FTR thinks they are different and needs to record them, 
+                     // often times creating a conflict.
+                     Schedule sked = null;
+                     UpcomingProgram[] upPrograms = null;
+                     using (TvSchedulerServiceAgent tssa = new TvSchedulerServiceAgent()) {
+                        sked = tssa.GetScheduleById(upProg.ScheduleId);
+                        if (sked != null) {
+                           upPrograms = tssa.GetUpcomingPrograms(sked,true);
+                        }
+                     }
+                     if (upPrograms != null) {
+                        for(int j = 0; j < upPrograms.Length; j++) {
+                           UpcomingProgram upProg2 = upPrograms[j];
+                           
+                           GuideProgram prog2 = null;
+                           using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
+                              prog2 = tgsa.GetProgramById((Guid)upProg2.GuideProgramId);
                            }
-                        } catch (Exception ex) {
-                           // couldn't convert ep nunmber to ints
-                           Logger.Warning("Error while converting season/ep to integers: {0}",ex.Message);
+                           try {
+                              prog2 = enrichProgram(prog2);
+                     
+                           } catch (NoSeriesMatchException) {
+                              noSeriesMatchList.Add(prog2.Title);
+                              prog = null;
+                           } catch (NoEpisodeMatchException) {
+                              noEpisodeMatchList.Add(prog2.Title + "-" + prog2.SubTitle);
+                              prog = null;
+                           } catch (DataEnricherException) {
+                              prog2 = null;
+                              // ignore other types for now
+                           }
+                           if (prog2 != null) {
+                              enrichedPrograms = addToEnrichedPrograms(enrichedPrograms,prog2);
+                           }
                         }
-                        
-                        enrichedPrograms.Add(prog);
                      }
-                  } catch (Exception ex) {
-                     Logger.Warning("Error enriching program: {0}",ex.Message);
+                     
+                    
                   }
 
 
@@ -247,8 +274,10 @@ namespace GuideEnricher
                   ftrlog("About to commit enriched guide data.  " + Convert.ToString(enrichedPrograms.Count) +
                      " entries were enriched.");
                   GuideProgram[] progArray = new GuideProgram[enrichedPrograms.Count];
-                  for (int i = 0; i < enrichedPrograms.Count; i++) {
-                     progArray[i] = (GuideProgram)enrichedPrograms[i];
+                  int i = 0;
+                  foreach (GuideProgram gp in enrichedPrograms.Values) {
+                     progArray[i] = (GuideProgram)gp;
+                     i++;
                   }
                   tgsa.ImportPrograms(progArray, GuideSource.XmlTv);
                }
@@ -258,6 +287,21 @@ namespace GuideEnricher
                            MODULE);
             }
             
+            if (noSeriesMatchList.Count > 0 || noEpisodeMatchList.Count > 0) {
+               ftrlog("There were " + Convert.ToString(noSeriesMatchList.Count) + " series that could not be matched and " +
+                      Convert.ToString(noEpisodeMatchList.Count) + " episodes that could not be found.  See system log for details");
+            }
+            string s = "";
+            foreach(string series in noSeriesMatchList) {
+               s += series + ", ";
+            }
+            string e = "";
+            foreach(string ep in noEpisodeMatchList) {
+               e += ep + ", ";
+            }
+               
+            Logger.Info("The following series could not be matched: {0}", s);
+            Logger.Info("The following episodes could not be matched: {0}",e);
             Logger.Info("{0}: Done enriching guide data", MODULE);
             ftrlog("Done enriching guide data");
 
@@ -265,6 +309,55 @@ namespace GuideEnricher
          }
       }
 
+      private Hashtable addToEnrichedPrograms(Hashtable existingTable, GuideProgram p) {
+         try {
+            existingTable.Add(p.GuideProgramId, p);
+            
+         } catch (ArgumentException) {
+            // swallow it if it's already there.
+         }
+         return existingTable;
+      }
+      private GuideProgram enrichProgram(GuideProgram prog) {
+         IDataEnricher de = DataEnricherFactory.Instance.getGuideDataEnricher();
+         // enrich program
+         try {
+            string oldEpisodeNumber = prog.EpisodeNumberDisplay;
+            GuideProgram updatedProgram = (GuideProgram)de.enrichProgram(prog);
+            
+            if (!prog.EpisodeNumberDisplay.Equals(oldEpisodeNumber)  ||
+                prog.EpisodeNumber != updatedProgram.EpisodeNumber ||
+                prog.SeriesNumber != updatedProgram.SeriesNumber) {
+               // program was actually enriched
+               prog.EpisodeNumberDisplay = updatedProgram.EpisodeNumberDisplay;
+               
+               // update the series/episode number fields too
+               try {
+                  string sep = prog.EpisodeNumberDisplay;
+                  if (sep.Length == 6) {
+                     int epInt = Convert.ToInt32(sep.Substring(4));
+                     int seasonInt = Convert.ToInt32(sep.Substring(1,2));
+                     prog.EpisodeNumber = epInt;
+                     prog.SeriesNumber = seasonInt;
+                  }
+               } catch (Exception ex) {
+                  // couldn't convert ep nunmber to ints
+                  Logger.Warning("Error while converting season/ep to integers: {0}",ex.Message);
+               }
+               
+               return prog;
+            }
+         } catch (DataEnricherException dee) {
+            // expected errors get thrown silently
+            throw dee;
+         } catch (Exception ex) {
+            // unexpected error, swallow, log and move on
+            Logger.Warning("Error enriching program: {0}",ex.Message);
+         }
+         // nothing was enriched
+         return null;
+      }
+      
       public static void ftrlog(string message) {
          using (ForTheRecord.ServiceAgents.LogServiceAgent logAgent = new LogServiceAgent()) {
             logAgent.LogMessage("GuideEnricher",LogSeverity.Information,message);
