@@ -117,7 +117,7 @@ namespace GuideEnricher.tvdb
                }
             }
 
-            Logger.Error("SD-TvDb: Could not find series match: {0} renamed {1}", seriesName, searchSeries);
+            Logger.Verbose("SD-TvDb: Could not find series match: {0} renamed {1}", seriesName, searchSeries);
             return "";
          } else {
             return "";
@@ -303,7 +303,7 @@ namespace GuideEnricher.tvdb
             return getSeasonEpisode(seriesName,seriesId,episodeName,allowTailMatch,true);
          }
          
-         Logger.Warning("No episode match for series: {0}, seriesId: {1}, episodeName: {2}",seriesName,seriesId,episodeName);
+         Logger.Verbose("No episode match for series: {0}, seriesId: {1}, episodeName: {2}",seriesName,seriesId,episodeName);
          // still can't match.. return nothing
          return "";
       }
