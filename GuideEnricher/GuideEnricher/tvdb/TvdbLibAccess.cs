@@ -185,7 +185,7 @@ namespace GuideEnricher.tvdb
             }
          }
          
-         int SHORTMATCH = 13;
+         int SHORTMATCH = 11;
          
          if (episodeName.Length >= SHORTMATCH) {
             // still here.. try matching a smaller part of the episode name
@@ -294,6 +294,13 @@ namespace GuideEnricher.tvdb
             
             
          }
+         
+         // check for multiple episodes... assume separated by ;
+         if (episodeName.Contains(";")) {
+            string firstEpisode = episodeName.Substring(0,episodeName.IndexOf(';'));
+            return getSeasonEpisode(seriesName,seriesId,firstEpisode,allowTailMatch,true);
+         }
+         
          
         
          if (!recurseCall) {
