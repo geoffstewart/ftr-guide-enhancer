@@ -64,7 +64,6 @@ namespace GuideEnricher
       /// </summary>
       protected override void Dispose(bool disposing)
       {
-         // TODO: Add cleanup code here (if required)
          base.Dispose(disposing);
       }
       
@@ -158,153 +157,157 @@ namespace GuideEnricher
        */
       
       public void enrichGuideData() {
+         try {
          
-         
-         while (workerLoop) {
-            
-            Logger.Info("Thread waiting for events...");
-            
-            // wait until the listener thread signals us to update the guide data
-            waitHandle.WaitOne();
-            if (!workerLoop) {
-               break;
-            }
-            
-            UpcomingRecording[] upcomingRecs = null;
-            Hashtable enrichedPrograms = new Hashtable();
-            
-            using (TvControlServiceAgent tcsa = new TvControlServiceAgent()) {
-               upcomingRecs = tcsa.GetAllUpcomingRecordings(UpcomingRecordingsFilter.Recordings,false);
-            }
-            
-            ftrlog("Starting process to enrich guide data.  Processing " + Convert.ToString(upcomingRecs.Length) + " upcoming shows");
-            
-            Logger.Info("{0}: Starting the process to enrich guide data.  Processing {1} upcoming shows",
-                        MODULE, Convert.ToString(upcomingRecs.Length));
-            
-            // lists to keep track of failed searches for series and episodes
-            // use these to prevent repeated searches that you know will fail
-            ArrayList noSeriesMatchList = new ArrayList();
-            ArrayList noEpisodeMatchList = new ArrayList();
-            
-            for (int i = 0; i < upcomingRecs.Length; i++) {
-               UpcomingProgram upProg = upcomingRecs[i].Program;
-
-               if (upProg.GuideProgramId != null)
-               {
-                  GuideProgram prog = null;
-                  using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
-                     prog = tgsa.GetProgramById((Guid)upProg.GuideProgramId);
-                  }
-
-                  try {
-                     if (noSeriesMatchList.Contains(prog.Title) ||
-                         noEpisodeMatchList.Contains(prog.Title + "-" + prog.SubTitle)) {
-                        // already failed on this, skip it=
-                        continue;
+            while (workerLoop) {
+               
+               Logger.Info("Thread waiting for events...");
+               
+               // wait until the listener thread signals us to update the guide data
+               waitHandle.WaitOne();
+               if (!workerLoop) {
+                  break;
+               }
+               
+               UpcomingRecording[] upcomingRecs = null;
+               Hashtable enrichedPrograms = new Hashtable();
+               
+               using (TvControlServiceAgent tcsa = new TvControlServiceAgent()) {
+                  upcomingRecs = tcsa.GetAllUpcomingRecordings(UpcomingRecordingsFilter.Recordings,false);
+               }
+               
+               ftrlog("Starting process to enrich guide data.  Processing " + Convert.ToString(upcomingRecs.Length) + " upcoming shows");
+               
+               Logger.Info("{0}: Starting the process to enrich guide data.  Processing {1} upcoming shows",
+                           MODULE, Convert.ToString(upcomingRecs.Length));
+               
+               // lists to keep track of failed searches for series and episodes
+               // use these to prevent repeated searches that you know will fail
+               ArrayList noSeriesMatchList = new ArrayList();
+               ArrayList noEpisodeMatchList = new ArrayList();
+               
+               for (int i = 0; i < upcomingRecs.Length; i++) {
+                  UpcomingProgram upProg = upcomingRecs[i].Program;
+   
+                  if (upProg.GuideProgramId != null)
+                  {
+                     GuideProgram prog = null;
+                     using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
+                        prog = tgsa.GetProgramById((Guid)upProg.GuideProgramId);
                      }
-                       
-                     prog = enrichProgram(prog);
+   
+                     try {
+                        if (noSeriesMatchList.Contains(prog.Title) ||
+                            noEpisodeMatchList.Contains(prog.Title + "-" + prog.SubTitle)) {
+                           // already failed on this, skip it=
+                           continue;
+                        }
+                          
+                        prog = enrichProgram(prog);
+                        
+                     } catch (NoSeriesMatchException) {
+                        noSeriesMatchList.Add(prog.Title);
+                        prog = null;
+                     } catch (NoEpisodeMatchException) {
+                        noEpisodeMatchList.Add(prog.Title + "-" + prog.SubTitle);
+                        prog = null;
+                     } catch (DataEnricherException) {
+                        prog = null;
+                        // ignore other types for now
+                     }
                      
-                  } catch (NoSeriesMatchException) {
-                     noSeriesMatchList.Add(prog.Title);
-                     prog = null;
-                  } catch (NoEpisodeMatchException) {
-                     noEpisodeMatchList.Add(prog.Title + "-" + prog.SubTitle);
-                     prog = null;
-                  } catch (DataEnricherException) {
-                     prog = null;
-                     // ignore other types for now
+                     if (prog != null) {
+                        enrichedPrograms = addToEnrichedPrograms(enrichedPrograms, prog);
+                        
+                        // find other programs that are part of this schedule and enrich them
+                        // too so they have the same episode information
+                        // otherwise, FTR thinks they are different and needs to record them, 
+                        // often times creating a conflict.
+                        Schedule sked = null;
+                        UpcomingProgram[] upPrograms = null;
+                        using (TvSchedulerServiceAgent tssa = new TvSchedulerServiceAgent()) {
+                           sked = tssa.GetScheduleById(upProg.ScheduleId);
+                           if (sked != null) {
+                              upPrograms = tssa.GetUpcomingPrograms(sked,true);
+                           }
+                        }
+                        if (upPrograms != null) {
+                           for(int j = 0; j < upPrograms.Length; j++) {
+                              UpcomingProgram upProg2 = upPrograms[j];
+                              
+                              GuideProgram prog2 = null;
+                              using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
+                                 prog2 = tgsa.GetProgramById((Guid)upProg2.GuideProgramId);
+                              }
+                              try {
+                                 prog2 = enrichProgram(prog2);
+                        
+                              } catch (NoSeriesMatchException) {
+                                 noSeriesMatchList.Add(prog2.Title);
+                                 prog = null;
+                              } catch (NoEpisodeMatchException) {
+                                 noEpisodeMatchList.Add(prog2.Title + "-" + prog2.SubTitle);
+                                 prog = null;
+                              } catch (DataEnricherException) {
+                                 prog2 = null;
+                                 // ignore other types for now
+                              }
+                              if (prog2 != null) {
+                                 enrichedPrograms = addToEnrichedPrograms(enrichedPrograms,prog2);
+                              }
+                           }
+                        }
+                        
+                       
+                     }
+   
+   
                   }
                   
-                  if (prog != null) {
-                     enrichedPrograms = addToEnrichedPrograms(enrichedPrograms, prog);
-                     
-                     // find other programs that are part of this schedule and enrich them
-                     // too so they have the same episode information
-                     // otherwise, FTR thinks they are different and needs to record them, 
-                     // often times creating a conflict.
-                     Schedule sked = null;
-                     UpcomingProgram[] upPrograms = null;
-                     using (TvSchedulerServiceAgent tssa = new TvSchedulerServiceAgent()) {
-                        sked = tssa.GetScheduleById(upProg.ScheduleId);
-                        if (sked != null) {
-                           upPrograms = tssa.GetUpcomingPrograms(sked,true);
-                        }
+               }
+               // if any programs were enriched, do the import ot update in teh db
+               if (enrichedPrograms.Count > 0) {
+                  using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
+                     Logger.Info("{0}: About to commit enriched guide data. {1} entries were enriched",
+                                 MODULE, Convert.ToString(enrichedPrograms.Count));
+                     ftrlog("About to commit enriched guide data.  " + Convert.ToString(enrichedPrograms.Count) +
+                        " entries were enriched.");
+                     GuideProgram[] progArray = new GuideProgram[enrichedPrograms.Count];
+                     int i = 0;
+                     foreach (GuideProgram gp in enrichedPrograms.Values) {
+                        progArray[i] = (GuideProgram)gp;
+                        i++;
                      }
-                     if (upPrograms != null) {
-                        for(int j = 0; j < upPrograms.Length; j++) {
-                           UpcomingProgram upProg2 = upPrograms[j];
-                           
-                           GuideProgram prog2 = null;
-                           using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
-                              prog2 = tgsa.GetProgramById((Guid)upProg2.GuideProgramId);
-                           }
-                           try {
-                              prog2 = enrichProgram(prog2);
-                     
-                           } catch (NoSeriesMatchException) {
-                              noSeriesMatchList.Add(prog2.Title);
-                              prog = null;
-                           } catch (NoEpisodeMatchException) {
-                              noEpisodeMatchList.Add(prog2.Title + "-" + prog2.SubTitle);
-                              prog = null;
-                           } catch (DataEnricherException) {
-                              prog2 = null;
-                              // ignore other types for now
-                           }
-                           if (prog2 != null) {
-                              enrichedPrograms = addToEnrichedPrograms(enrichedPrograms,prog2);
-                           }
-                        }
-                     }
-                     
-                    
+                     tgsa.ImportPrograms(progArray, GuideSource.XmlTv);
                   }
-
-
+               } else {
+                  ftrlog("No programs were enriched");
+                  Logger.Info("{0}: No programs were enriched.",
+                              MODULE);
                }
                
-            }
-            // if any programs were enriched, do the import ot update in teh db
-            if (enrichedPrograms.Count > 0) {
-               using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
-                  Logger.Info("{0}: About to commit enriched guide data. {1} entries were enriched",
-                              MODULE, Convert.ToString(enrichedPrograms.Count));
-                  ftrlog("About to commit enriched guide data.  " + Convert.ToString(enrichedPrograms.Count) +
-                     " entries were enriched.");
-                  GuideProgram[] progArray = new GuideProgram[enrichedPrograms.Count];
-                  int i = 0;
-                  foreach (GuideProgram gp in enrichedPrograms.Values) {
-                     progArray[i] = (GuideProgram)gp;
-                     i++;
-                  }
-                  tgsa.ImportPrograms(progArray, GuideSource.XmlTv);
+               if (noSeriesMatchList.Count > 0 || noEpisodeMatchList.Count > 0) {
+                  ftrlog("There were " + Convert.ToString(noSeriesMatchList.Count) + " series that could not be matched and " +
+                         Convert.ToString(noEpisodeMatchList.Count) + " episodes that could not be found.  See system log for details");
                }
-            } else {
-               ftrlog("No programs were enriched");
-               Logger.Info("{0}: No programs were enriched.",
-                           MODULE);
-            }
-            
-            if (noSeriesMatchList.Count > 0 || noEpisodeMatchList.Count > 0) {
-               ftrlog("There were " + Convert.ToString(noSeriesMatchList.Count) + " series that could not be matched and " +
-                      Convert.ToString(noEpisodeMatchList.Count) + " episodes that could not be found.  See system log for details");
-            }
-            string s = "";
-            foreach(string series in noSeriesMatchList) {
-               s += series + ", ";
-            }
-            string e = "";
-            foreach(string ep in noEpisodeMatchList) {
-               e += ep + ", ";
-            }
+               string s = "";
+               foreach(string series in noSeriesMatchList) {
+                  s += series + ", ";
+               }
+               string e = "";
+               foreach(string ep in noEpisodeMatchList) {
+                  e += ep + ", ";
+               }
+                  
+               Logger.Info("The following series could not be matched: {0}", s);
+               Logger.Info("The following episodes could not be matched: {0}",e);
+               Logger.Info("{0}: Done enriching guide data", MODULE);
+               ftrlog("Done enriching guide data");
+   
                
-            Logger.Info("The following series could not be matched: {0}", s);
-            Logger.Info("The following episodes could not be matched: {0}",e);
-            Logger.Info("{0}: Done enriching guide data", MODULE);
-            ftrlog("Done enriching guide data");
-
+            }
+         } catch (Exception topEx) {
+            Logger.Error("The main loop for GuideEnricher received this exception:\n{0}\n{1}", topEx.Message,topEx.StackTrace);
             
          }
       }
