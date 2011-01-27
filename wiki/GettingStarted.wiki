@@ -1,5 +1,7 @@
-#summary Details for the Test Release
+#summary How to get started
 #labels Featured,Phase-Deploy
+
+I consider the GuideEnricher to be stable at this point.  I'm not actively developing features but will still fix bugs as fast as I can.
 
 = Pre Requisite =
 
