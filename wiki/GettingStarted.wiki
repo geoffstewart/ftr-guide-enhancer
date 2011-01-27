@@ -1,9 +1,17 @@
 #summary Details for the Test Release
 #labels Featured,Phase-Deploy
 
-= Introduction =
+= Pre Requisite =
 
-If you are going to test the Guide Enricher, follow these steps.
+You need to have .Net 4.0 installed on the machine that will host the GuideEnricher.  You can get the web install here: 
+http://www.microsoft.com/downloads/en/details.aspx?FamilyID=9cfb2d51-5ff4-4491-b0e5-b386f32c0992
+
+And the offline installer:
+http://www.microsoft.com/downloads/en/details.aspx?displaylang=en&FamilyID=0a391abd-25c1-4fc0-919f-b21f31ab88b7
+
+= Installation =
+
+If you are going to use the Guide Enricher, follow these steps.
 
   *  Download the installer
   *  Make sure you have ForTheRecord installed and running
