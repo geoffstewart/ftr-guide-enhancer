@@ -299,6 +299,13 @@ namespace GuideEnricher
                   e += ep + ", ";
                }
                   
+               // keep log messages less than 32722 characters or the windows logger will barf
+               if (s.Length > 32000) {
+                  s = s.Substring(0,32000);
+               }
+               if (e.Length > 32000) {
+                  e = e.Substring(0,32000);
+               }
                Logger.Info("The following series could not be matched: {0}", s);
                Logger.Info("The following episodes could not be matched: {0}",e);
                Logger.Info("{0}: Done enriching guide data", MODULE);

@@ -17,6 +17,7 @@ namespace GuideEnricher
    public sealed class DataEnricherFactory
    {
       private static DataEnricherFactory instance = new DataEnricherFactory();
+      private static IDataEnricher guideDataEnricher = null;
       
       public static DataEnricherFactory Instance {
          get {
@@ -32,8 +33,10 @@ namespace GuideEnricher
       public IDataEnricher getGuideDataEnricher() {
          // for now, this is just for tvdb.com, but in future, 
          // other implementations may exist
-         IDataEnricher tvdbEnricher = new tvdb.TvDbDataEnricher();
-         return tvdbEnricher;
+         if (guideDataEnricher == null) {
+            guideDataEnricher = new tvdb.TvDbDataEnricher();
+         }
+         return guideDataEnricher;
          
          
       }
