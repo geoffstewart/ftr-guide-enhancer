@@ -25,12 +25,19 @@ namespace GuideEnricher
 
         private static LogType logLevel = LogType.Information | LogType.Warning | LogType.Error | LogType.Verbose;
 
-
+        private static int MAXLOG = 32000;
+        
+        private static string capMessage(string message) {
+           if (message.Length > MAXLOG) {
+              return message.Substring(0,MAXLOG);
+           }
+           return message;
+        }
         public static void Info(string message, params string[] args)
         {
             // throws an exception about a missing dll 
             //ForTheRecord.Common.Logging.Logger.Info(message, args);
-            WriteEventLog(string.Format(message, args), LogType.Information);
+            WriteEventLog(string.Format(capMessage(message), args), LogType.Information);
         }
 
         public static void Verbose(string message, params string[] args)
@@ -86,7 +93,7 @@ namespace GuideEnricher
                 if (!EventLog.SourceExists(sSource))
                     EventLog.CreateEventSource(sSource, sLog);
 
-                EventLog.WriteEntry(sSource, message, eventLogType);
+                EventLog.WriteEntry(sSource, capMessage(message), eventLogType);
             }
         }
     }
