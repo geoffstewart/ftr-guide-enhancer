@@ -28,6 +28,8 @@ namespace GuideEnricher.tvdb
       private Hashtable seriesNameRegex = new Hashtable();
       private List<string> seriesIgnore = new List<string>();
 
+      private Hashtable seriesCache = new Hashtable();
+      
       private TvdbLanguage language = TvdbLanguage.DefaultLanguage;
       
       public static string IGNORED = "-IGNORED-"; // not likely a series will be called this
@@ -77,6 +79,12 @@ namespace GuideEnricher.tvdb
       public string getSeriesId(string seriesName) {
          
          string searchSeries = seriesName;
+         
+         // check cache first
+         if (seriesCache.Contains(seriesName)) {
+            Logger.Verbose("SD-TvDb: Series cache hit: " + seriesName + " has id: " + seriesCache[seriesName]);
+            return (string)seriesCache[seriesName];
+         }
          if (seriesNameMapping.Contains(seriesName)) {
             if (this.seriesIgnore.Contains(seriesName)) {
                return IGNORED;
@@ -113,6 +121,9 @@ namespace GuideEnricher.tvdb
                if (searchSeries.ToLower().Equals(l[i].SeriesName.ToLower())) {
                   string id = "" + l[i].Id;
                   Logger.Verbose("SD-TvDb: series: " + searchSeries + "  id: " + id);
+                  // add to cache
+                  seriesCache.Add(seriesName, id);
+                  
                   return id;
                }
             }
@@ -185,7 +196,16 @@ namespace GuideEnricher.tvdb
             }
          }
          
-         int SHORTMATCH = 11;
+         // check for multiple episodes... assume separated by ;
+         if (!recurseCall && episodeName.Contains(";")) {
+            string firstEpisode = episodeName.Substring(0,episodeName.IndexOf(';'));
+            string localResult = getSeasonEpisode(seriesName,seriesId,firstEpisode,allowTailMatch,true);
+            if (localResult.Length > 0) {
+               return localResult;
+            }
+         }
+                  
+         int SHORTMATCH = 20;
          
          if (episodeName.Length >= SHORTMATCH) {
             // still here.. try matching a smaller part of the episode name
@@ -294,13 +314,6 @@ namespace GuideEnricher.tvdb
             
             
          }
-         
-         // check for multiple episodes... assume separated by ;
-         if (episodeName.Contains(";")) {
-            string firstEpisode = episodeName.Substring(0,episodeName.IndexOf(';'));
-            return getSeasonEpisode(seriesName,seriesId,firstEpisode,allowTailMatch,true);
-         }
-         
          
         
          if (!recurseCall) {
