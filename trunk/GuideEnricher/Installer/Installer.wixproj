@@ -54,5 +54,5 @@ copy ..\..\..\GuideEnricher\bin\Debug\* ..\..\dist;
       <Name>GuideEnricherService</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(WixToolPath)\wix.targets" />
+  <Import Project="$(WixTargetsPath)" />
 </Project>
