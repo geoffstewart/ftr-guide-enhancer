@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+# SharpDevelop 4.0.0.6842
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuideEnricherService", "GuideEnricher\GuideEnricherService.csproj", "{9D718DA7-3160-4968-8048-361D7C1F3009}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigTool", "ConfigTool\ConfigTool.csproj", "{D344EB44-2423-411C-9324-8226616D5DE5}"
+EndProject
+Project("{CFEE4113-1246-4D54-95CB-156813CB8593}") = "Installer", "Installer\Installer.wixproj", "{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9D718DA7-3160-4968-8048-361D7C1F3009}.Debug|x86.Build.0 = Debug|x86
+		{9D718DA7-3160-4968-8048-361D7C1F3009}.Debug|x86.ActiveCfg = Debug|x86
+		{9D718DA7-3160-4968-8048-361D7C1F3009}.Release|x86.Build.0 = Release|x86
+		{9D718DA7-3160-4968-8048-361D7C1F3009}.Release|x86.ActiveCfg = Release|x86
+		{D344EB44-2423-411C-9324-8226616D5DE5}.Debug|x86.Build.0 = Debug|x86
+		{D344EB44-2423-411C-9324-8226616D5DE5}.Debug|x86.ActiveCfg = Debug|x86
+		{D344EB44-2423-411C-9324-8226616D5DE5}.Release|x86.Build.0 = Release|x86
+		{D344EB44-2423-411C-9324-8226616D5DE5}.Release|x86.ActiveCfg = Release|x86
+		{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}.Debug|x86.Build.0 = Debug|x86
+		{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}.Debug|x86.ActiveCfg = Debug|x86
+		{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}.Release|x86.Build.0 = Release|x86
+		{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}.Release|x86.ActiveCfg = Release|x86
+	EndGlobalSection
+EndGlobal
