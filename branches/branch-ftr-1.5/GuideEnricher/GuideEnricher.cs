@@ -265,20 +265,45 @@ namespace GuideEnricher
                   }
                   
                }
-               // if any programs were enriched, do the import ot update in teh db
+               // if any programs were enriched, do the import to update in the db
                if (enrichedPrograms.Count > 0) {
                   using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent()) {
                      Logger.Info("{0}: About to commit enriched guide data. {1} entries were enriched",
                                  MODULE, Convert.ToString(enrichedPrograms.Count));
                      ftrlog("About to commit enriched guide data.  " + Convert.ToString(enrichedPrograms.Count) +
                         " entries were enriched.");
-                     GuideProgram[] progArray = new GuideProgram[enrichedPrograms.Count];
-                     int i = 0;
-                     foreach (GuideProgram gp in enrichedPrograms.Values) {
-                        progArray[i] = (GuideProgram)gp;
-                        i++;
+                     
+                     // update "windowSize" programs at a time to prevent the webservice from timing out
+                     int windowBase = 0;
+                     int windowSize = int.Parse(Config.getProperty("maxShowNumberPerUpdate"));
+                     int loopCount = 0;
+                    
+                     ArrayList list = new ArrayList();
+                     list.AddRange(enrichedPrograms.Values);
+                     
+                     loopCount = list.Count / windowSize;
+                     
+                     for (int j = 0; j < loopCount+1; j++) {
+                        int currentWindowSize = windowSize;
+                        if (list.Count < windowSize) {
+                           currentWindowSize = list.Count;
+                        }
+                        int k = 0;
+                        GuideProgram[] progArray = new GuideProgram[currentWindowSize];
+                        
+                        Logger.Verbose("Importing shows from {0} to {1} (zero-based)",Convert.ToString(windowBase),Convert.ToString(windowBase + currentWindowSize));
+
+                        foreach (GuideProgram gp in list.GetRange(0, currentWindowSize)) {
+                           
+                           progArray[k] = (GuideProgram)gp;
+                           k++;
+                        }
+                        
+                        tgsa.ImportPrograms(progArray, GuideSource.XmlTv);
+                        list.RemoveRange(0, currentWindowSize);
+                        windowBase += currentWindowSize;
+                        
                      }
-                     tgsa.ImportPrograms(progArray, GuideSource.XmlTv);
                   }
                } else {
                   ftrlog("No programs were enriched");
