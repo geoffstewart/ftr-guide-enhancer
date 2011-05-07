@@ -287,6 +287,7 @@ namespace GuideEnricher
                     }
                     else
                     {
+                        ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "No programs were enriched");
                         log.Debug("No programs were enriched");
                     }
                     #endregion
