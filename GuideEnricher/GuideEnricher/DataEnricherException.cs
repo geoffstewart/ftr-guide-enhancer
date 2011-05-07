@@ -6,15 +6,15 @@
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
-using System;
-using System.Runtime.Serialization;
-
 namespace GuideEnricher
 {
-   /// <summary>
+    using System;
+    using System.Runtime.Serialization;
+
+    /// <summary>
    /// Desctiption of DataEnricherException.
    /// </summary>
-   public abstract class DataEnricherException : Exception, ISerializable
+   public abstract class DataEnricherException : Exception
    {
       public DataEnricherException()
       {

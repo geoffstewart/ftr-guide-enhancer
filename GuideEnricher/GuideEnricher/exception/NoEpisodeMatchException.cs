@@ -6,17 +6,12 @@
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
-using System;
-
-namespace GuideEnricher.exception
+namespace GuideEnricher.Exceptions
 {
    /// <summary>
    /// Description of NoEpisodeMatchException.
    /// </summary>
-   public class NoEpisodeMatchException: DataEnricherException
+   public class NoEpisodeMatchException : DataEnricherException
    {
-      public NoEpisodeMatchException()
-      {
-      }
    }
 }

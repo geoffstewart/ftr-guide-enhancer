@@ -9,7 +9,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace GuideEnricher.exception
+namespace GuideEnricher.Exceptions
 {
    /// <summary>
    /// Desctiption of NoSeriesMatchException.

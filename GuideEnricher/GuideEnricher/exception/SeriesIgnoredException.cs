@@ -6,17 +6,12 @@
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
-using System;
-
-namespace GuideEnricher.exception
+namespace GuideEnricher.Exceptions
 {
    /// <summary>
    /// Description of SeriesIgnoredException.
    /// </summary>
    public class SeriesIgnoredException : DataEnricherException
    {
-      public SeriesIgnoredException()
-      {
-      }
    }
 }
