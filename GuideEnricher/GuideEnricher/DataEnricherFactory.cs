@@ -6,9 +6,6 @@
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
-using System;
-
-
 namespace GuideEnricher
 {
    /// <summary>
@@ -17,7 +14,7 @@ namespace GuideEnricher
    public sealed class DataEnricherFactory
    {
       private static DataEnricherFactory instance = new DataEnricherFactory();
-      private static IDataEnricher guideDataEnricher = null;
+      private static IDataEnricher guideDataEnricher;
       
       public static DataEnricherFactory Instance {
          get {
@@ -30,15 +27,11 @@ namespace GuideEnricher
          // deliberately emptry for now
       }
       
-      public IDataEnricher getGuideDataEnricher() {
-         // for now, this is just for tvdb.com, but in future, 
+      public IDataEnricher getGuideDataEnricher()
+      {
+          // for now, this is just for tvdb.com, but in future, 
          // other implementations may exist
-         if (guideDataEnricher == null) {
-            guideDataEnricher = new tvdb.TvDbDataEnricher();
-         }
-         return guideDataEnricher;
-         
-         
+          return guideDataEnricher ?? (guideDataEnricher = new tvdb.TvDbDataEnricher());
       }
    }
 }

@@ -8,7 +8,7 @@
  */
 namespace GuideEnricher.Exceptions
 {
-   /// <summary>
+    /// <summary>
    /// Description of NoEpisodeMatchException.
    /// </summary>
    public class NoEpisodeMatchException : DataEnricherException

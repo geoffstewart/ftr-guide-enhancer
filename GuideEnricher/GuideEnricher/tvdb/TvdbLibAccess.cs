@@ -27,12 +27,11 @@ namespace GuideEnricher.tvdb
     {
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private TvdbHandler tvdbHandler;
-        private Hashtable seriesNameMapping = new Hashtable();
-        private List<string> seriesExplicit = new List<string>();
-        private Hashtable seriesNameRegex = new Hashtable();
+        private Dictionary<string, string> seriesNameMapping = new Dictionary<string, string>();
+        private Dictionary<string, string> seriesNameRegex = new Dictionary<string, string>();
         private List<string> seriesIgnore = new List<string>();
 
-        private Hashtable seriesCache = new Hashtable();
+        private Dictionary<string, string> seriesCache = new Dictionary<string, string>();
 
         private TvdbLanguage language = TvdbLanguage.DefaultLanguage;
 
@@ -50,24 +49,10 @@ namespace GuideEnricher.tvdb
             tvdbHandler = new TvdbHandler(new XmlCacheProvider(cache), tvdbid);
             tvdbHandler.InitCache();
 
-            seriesNameMapping = (Hashtable)Config.getSeriesNameMap();
+            seriesNameMapping = Config.getSeriesNameMap();
             seriesIgnore = Config.getIgnoredSeries();
 
-            #region choose language according to value in config
-            List<TvdbLanguage> m_languages = tvdbHandler.Languages;
-            string langInConfig = Config.getProperty("TvDbLanguage");
-            // if there is a value for TvDbLanguage in the settings, set the right language
-            if (langInConfig != null && langInConfig != "")
-            {
-                TvdbLanguage lang = m_languages.Find(delegate(TvdbLanguage l)
-                  {
-                      return l.Abbriviation == langInConfig;
-                  }
-                );
-                if (lang != null) language = lang;
-                log.DebugFormat("Language: {0}", language.Abbriviation);
-            }
-            #endregion
+            this.language = SetLanguage();
 
             // initialize any regex mappings
             foreach (string regex in seriesNameMapping.Keys)
@@ -79,6 +64,22 @@ namespace GuideEnricher.tvdb
             }
         }
 
+        private TvdbLanguage SetLanguage()
+        {
+            List<TvdbLanguage> availableLanguages = this.tvdbHandler.Languages;
+            string selectedLanguage = Config.getProperty("TvDbLanguage");
+            
+            // if there is a value for TvDbLanguage in the settings, set the right language
+            if (string.IsNullOrEmpty(selectedLanguage))
+            {
+                selectedLanguage = "en";
+            }
+
+            TvdbLanguage lang = availableLanguages.Find(x => x.Abbriviation == selectedLanguage);
+            this.log.DebugFormat("Language: {0}", lang.Abbriviation);
+            return lang;
+        }
+
         public void closeCache()
         {
             tvdbHandler.CloseCache();
@@ -86,22 +87,21 @@ namespace GuideEnricher.tvdb
 
         public string getSeriesId(string seriesName)
         {
-
             string searchSeries = seriesName;
 
             // check cache first
-            if (seriesCache.Contains(seriesName))
+            if (seriesCache.ContainsKey(seriesName))
             {
                 log.DebugFormat("SD-TvDb: Series cache hit: {0} has id: {1}", seriesName, seriesCache[seriesName]);
-                return (string)seriesCache[seriesName];
+                return seriesCache[seriesName];
             }
-            if (seriesNameMapping.Contains(seriesName))
+            if (seriesNameMapping.ContainsKey(seriesName))
             {
                 if (this.seriesIgnore.Contains(seriesName))
                 {
                     return IGNORED;
                 }
-                searchSeries = (string)seriesNameMapping[seriesName];
+                searchSeries = this.seriesNameMapping[seriesName];
             }
             else if (this.seriesNameRegex.Count > 0)
             {
@@ -117,7 +117,7 @@ namespace GuideEnricher.tvdb
                         {
                             return IGNORED;
                         }
-                        searchSeries = (string)seriesNameRegex[regexEntry];
+                        searchSeries = seriesNameRegex[regexEntry];
                         log.DebugFormat("SD-TvDb: Regex mapping: series: {0} regex: {1} seriesMatch: {2}", seriesName, regex, searchSeries);
                         
                         break;
@@ -498,6 +498,5 @@ namespace GuideEnricher.tvdb
 
             return sb.ToString();
         }
-
     }
 }

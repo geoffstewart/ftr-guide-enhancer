@@ -8,7 +8,7 @@
  */
 namespace GuideEnricher.Exceptions
 {
-   /// <summary>
+    /// <summary>
    /// Description of SeriesIgnoredException.
    /// </summary>
    public class SeriesIgnoredException : DataEnricherException

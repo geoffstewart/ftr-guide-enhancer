@@ -19,7 +19,7 @@ namespace GuideEnricher
     using System.Threading;
     using ForTheRecord.Entities;
     using ForTheRecord.ServiceAgents;
-    using global::GuideEnricher.Exceptions;
+    using Exceptions;
     using log4net;
 
     /**
