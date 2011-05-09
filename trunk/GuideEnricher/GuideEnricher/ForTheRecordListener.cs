@@ -59,7 +59,7 @@ namespace GuideEnricher
         private void signalOtherThread()
         {
             log.DebugFormat("{0}: signal worker thread", MODULE);
-            GuideEnricher.waitHandle.Set();
+            GuideEnricherService.waitHandle.Set();
         }
     }
 }

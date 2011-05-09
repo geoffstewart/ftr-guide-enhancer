@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Configuration;
-using System.Collections;
-using System.Collections.Specialized;
-using System.Diagnostics;
-
-#region
-//*** Auxiliary Classes ***//
-namespace GuideEnricher
+﻿namespace GuideEnricher
 {
+    using System.Collections.Generic;
+    using System.Configuration;
+
     public class SeriesNameMap : ConfigurationElement
     {
         // Create the element.
@@ -79,16 +71,6 @@ namespace GuideEnricher
             }
         }
 
-        protected override void DeserializeElement(
-           System.Xml.XmlReader reader,
-           bool serializeCollectionKey)
-        {
-            base.DeserializeElement(reader,
-                                    serializeCollectionKey);
-            // You can your custom processing code here.
-        }
-
-
         protected override bool SerializeElement(
            System.Xml.XmlWriter writer,
            bool serializeCollectionKey)
@@ -100,112 +82,44 @@ namespace GuideEnricher
 
         }
 
-
         protected override bool IsModified()
         {
             bool ret = base.IsModified();
             // You can enter your custom processing code here.
             return ret;
         }
-
     }
 
-    [ConfigurationCollection(typeof(SeriesNameMap), AddItemName = "seriesMap", CollectionType = ConfigurationElementCollectionType.BasicMap)]
-    public class SeriesNameMapCollection : ConfigurationElementCollection
+    public class Config : IConfiguration
     {
-        protected override ConfigurationElement CreateNewElement()
+        private static Config configInstance;
+        
+        private Config()
         {
-            return new SeriesNameMap();
         }
 
-        protected override object GetElementKey(ConfigurationElement element)
+        public static Config GetInstance()
         {
-            return ((SeriesNameMap)element).SchedulesDirectName;
-        }
-
-        public void Add(SeriesNameMap element)
-        {
-            BaseAdd(element);
-        }
-
-        public void Clear()
-        {
-            BaseClear();
-        }
-
-        public int IndexOf(SeriesNameMap element)
-        {
-            return BaseIndexOf(element);
-        }
-
-        public void Remove(SeriesNameMap element)
-        {
-            if (BaseIndexOf(element) >= 0)
+            if (configInstance == null)
             {
-                BaseRemove(element.SchedulesDirectName);
+                configInstance = new Config();
             }
+
+            return configInstance;
         }
 
-        public void RemoveAt(int index)
-        {
-            BaseRemoveAt(index);
-        }
-
-        public SeriesNameMap this[int index]
-        {
-            get { return (SeriesNameMap)BaseGet(index); }
-            set
-            {
-                if (BaseGet(index) != null)
-                {
-                    BaseRemoveAt(index);
-                }
-                BaseAdd(index, value);
-            }
-        }
-
-    }
-
-
-    public class SeriesNameMapsSection : ConfigurationSection
-    {
-        private static readonly ConfigurationProperty _propSeriesMap = new ConfigurationProperty(
-           null,
-           typeof(SeriesNameMapCollection),
-           null,
-           ConfigurationPropertyOptions.IsDefaultCollection
-          );
-
-        private static ConfigurationPropertyCollection _properties = new ConfigurationPropertyCollection();
-
-        static SeriesNameMapsSection()
-        {
-            _properties.Add(_propSeriesMap);
-        }
-
-        [ConfigurationProperty("", Options = ConfigurationPropertyOptions.IsDefaultCollection)]
-        public SeriesNameMapCollection SeriesMapping
-        {
-            get { return (SeriesNameMapCollection)base[_propSeriesMap]; }
-        }
-
-    }
-
-    public class Config
-    {
-
-        public static string getProperty(string key)
+        public string getProperty(string key)
         {
             return ConfigurationManager.AppSettings[key];
 
         }
 
-        public static Dictionary<string, string> getSeriesNameMap()
+        public Dictionary<string, string> getSeriesNameMap()
         {
             SeriesNameMapsSection mapSec = ConfigurationManager.GetSection("seriesMapping") as SeriesNameMapsSection;
             if (mapSec == null)
             {
-                return null;
+                return new Dictionary<string, string>(0);
             }
 
             Dictionary<string, string> series = new Dictionary<string, string>(mapSec.SeriesMapping.Count);
@@ -218,9 +132,14 @@ namespace GuideEnricher
             return series;
         }
 
-        public static List<string> getIgnoredSeries()
+        public List<string> getIgnoredSeries()
         {
             SeriesNameMapsSection mapSec = ConfigurationManager.GetSection("seriesMapping") as SeriesNameMapsSection;
+
+            if (mapSec == null)
+            {
+                return null;
+            }
 
             List<string> l = new List<string>();
 
@@ -236,4 +155,3 @@ namespace GuideEnricher
 
     }
 }
-#endregion

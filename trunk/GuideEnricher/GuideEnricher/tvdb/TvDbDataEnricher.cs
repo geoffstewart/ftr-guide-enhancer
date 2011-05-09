@@ -24,7 +24,7 @@ namespace GuideEnricher.tvdb
 
         public TvDbDataEnricher()
         {
-            tvdblib = new TvdbLibAccess();
+            tvdblib = new TvdbLibAccess(Config.GetInstance());
         }
 
         public void close()
