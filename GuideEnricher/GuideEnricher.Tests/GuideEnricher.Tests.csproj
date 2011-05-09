@@ -59,7 +59,7 @@
   <ItemGroup>
     <Compile Include="EnrichTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TVDBLibTest.cs" />
+    <Compile Include="TVDBLibEnrichTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GuideEnricher\GuideEnricherService.csproj">
