@@ -17,18 +17,19 @@ namespace GuideEnricher
     using System.ServiceProcess;
     using System.Text.RegularExpressions;
     using System.Threading;
+    using Exceptions;
     using ForTheRecord.Entities;
     using ForTheRecord.ServiceAgents;
-    using Exceptions;
     using log4net;
 
     /**
      * Class that defines the service start/stop behaviours
      */
-    public class GuideEnricher : ServiceBase
+    public class GuideEnricherService : ServiceBase
     {
         public const string MyServiceName = "GuideEnricher";
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly IConfiguration config;
         private readonly LogServiceAgent ftrlogAgent;
         private const string MODULE = "GuideEnricher";
 
@@ -40,10 +41,11 @@ namespace GuideEnricher
 
         private static int[] intMatcher = new int[9];
 
-        private static int intAlreadyEnriched = 0;
+        private static int intAlreadyEnriched;
         
-        public GuideEnricher()
+        public GuideEnricherService(IConfiguration configuration)
         {
+            this.config = configuration;
             InitializeComponent();
             ftrlogAgent = new LogServiceAgent();
         }
@@ -51,17 +53,10 @@ namespace GuideEnricher
         private void InitializeComponent()
         {
             this.ServiceName = MyServiceName;
-
-            worker = new Thread(enrichGuideData);
-
+            worker = new Thread(this.EnrichGuideDataJob);
             sleeper = new Thread(enrichTimer);
-
         }
 
-        /// <summary>
-        /// Start this service.
-        /// </summary>
-        
         // Added this to allow us to debug from Main method (no need to run the service to debug)
         public void Start()
         {
@@ -73,11 +68,12 @@ namespace GuideEnricher
             //         Thread.Sleep(10000);
             try
             {
+                IConfiguration config = Config.GetInstance();
                 ServerSettings serverSettings = new ServerSettings();
-                serverSettings.ServerName = Config.getProperty("ftrUrlHost");
+                serverSettings.ServerName = config.getProperty("ftrUrlHost");
                 serverSettings.Transport = ServiceTransport.NetTcp;
-                serverSettings.Port = Convert.ToInt32(Config.getProperty("ftrUrlPort"));
-                string pass = Config.getProperty("ftrUrlPassword");
+                serverSettings.Port = Convert.ToInt32(config.getProperty("ftrUrlPort"));
+                string pass = config.getProperty("ftrUrlPassword");
 
                 if (pass != null && pass.Length > 0)
                 {
@@ -95,7 +91,7 @@ namespace GuideEnricher
                 ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "GuideEnricher successfully connected");
                 log.Info("Connected to ForTheRecordService");
 
-                ServiceHost sh = ForTheRecordListener.CreateServiceHost(Config.getProperty("serviceUrl"));
+                ServiceHost sh = ForTheRecordListener.CreateServiceHost(config.getProperty("serviceUrl"));
 
                 try
                 {
@@ -118,7 +114,7 @@ namespace GuideEnricher
                 using (ForTheRecordServiceAgent agent = new ForTheRecordServiceAgent())
                 {
                     ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents | ForTheRecordEventGroup.GuideEvents;
-                    agent.EnsureEventListener(eventGroupsToListenTo, Config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
+                    agent.EnsureEventListener(eventGroupsToListenTo, this.config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
 
                 }
             }
@@ -145,7 +141,6 @@ namespace GuideEnricher
             waitHandle.Set();
             sleeper.Abort();
             log.Info("Stopping the GuideEnricher");
-
         }
 
         /**
@@ -155,7 +150,7 @@ namespace GuideEnricher
          * if the episode information changed
          */
 
-        public void enrichGuideData()
+        public void EnrichGuideDataJob()
         {
 
             intAlreadyEnriched = 0;
@@ -165,7 +160,6 @@ namespace GuideEnricher
             }
             try
             {
-
                 while (workerLoop)
                 {
 
@@ -178,13 +172,9 @@ namespace GuideEnricher
                         break;
                     }
 
-                    UpcomingRecording[] upcomingRecs;
                     Hashtable enrichedPrograms = new Hashtable();
 
-                    using (TvControlServiceAgent tcsa = new TvControlServiceAgent())
-                    {
-                        upcomingRecs = tcsa.GetAllUpcomingRecordings(UpcomingRecordingsFilter.Recordings, false);
-                    }
+                    UpcomingRecording[] upcomingRecs = GetUpcomingRecordings();
 
                     ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "Starting process to enrich guide data.  Processing " + Convert.ToString(upcomingRecs.Length) + " upcoming shows");
                     log.InfoFormat("{0}: Starting the process to enrich guide data.  Processing {1} upcoming shows", MODULE, Convert.ToString(upcomingRecs.Length));
@@ -200,13 +190,13 @@ namespace GuideEnricher
                     {
                         int intPreEnrichLength = enrichedPrograms.Count;
 
-                        GuideProgram prog = null;
+                        GuideProgram prog;
                         using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent())
                         {
                             prog = tgsa.GetProgramById((Guid)prgToRecord.Program.GuideProgramId);
                         }
 
-                        enrichSubroutine(prog, ref uniqueProgramsOnly, ref noSeriesMatchList, ref noEpisodeMatchList, ref enrichedPrograms);
+                        this.EnrichSubroutine(prog, ref uniqueProgramsOnly, ref noSeriesMatchList, ref noEpisodeMatchList, ref enrichedPrograms);
 
                         // find other programs that are part of this schedule and enrich them
                         // too so they have the same episode information
@@ -214,8 +204,8 @@ namespace GuideEnricher
                         // often times creating a conflict.
                         if (intPreEnrichLength!=enrichedPrograms.Count)
                         {
-                            Schedule scdProgramsSchedule = null;
-                            UpcomingProgram[] upPrograms = null;
+                            Schedule scdProgramsSchedule;
+                            UpcomingProgram[] upPrograms;
                             using (TvSchedulerServiceAgent tssa = new TvSchedulerServiceAgent())
                             {
                                 scdProgramsSchedule = tssa.GetScheduleById(prgToRecord.Program.ScheduleId);
@@ -224,73 +214,25 @@ namespace GuideEnricher
 
                             foreach (UpcomingProgram scdProgram in upPrograms)
                             {
-                                GuideProgram prog2 = null;
+                                GuideProgram prog2;
                                 using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent())
                                 {
                                     prog2 = tgsa.GetProgramById((Guid)scdProgram.GuideProgramId);
                                 }
-                                enrichSubroutine(prog2, ref uniqueProgramsOnly, ref noSeriesMatchList, ref noEpisodeMatchList, ref enrichedPrograms);
+                                this.EnrichSubroutine(prog2, ref uniqueProgramsOnly, ref noSeriesMatchList, ref noEpisodeMatchList, ref enrichedPrograms);
                             }
                         }
                     }
 
-                    #region ImportInto FTR
-                    // if any programs were enriched, do the import to update in the db
                     if (enrichedPrograms.Count > 0)
                     {
-                        using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent())
-                        {
-                            String entryentries = "entries";
-                            string waswere = "were";
-                            if (enrichedPrograms.Count == 1)
-                            {
-                                entryentries = "entry";
-                                waswere = "was";
-                            }
-                            log.DebugFormat("{0}: About to commit enriched guide data. {1} {2} {3} enriched", MODULE, Convert.ToString(enrichedPrograms.Count), entryentries, waswere);
-                            ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, string.Format("About to commit enriched guide data. {0} entries were enriched.", enrichedPrograms.Count));
-
-                            // update "windowSize" programs at a time to prevent the webservice from timing out
-                            int windowBase = 0;
-                            int windowSize = int.Parse(Config.getProperty("maxShowNumberPerUpdate"));
-                            int loopCount = 0;
-
-                            ArrayList list = new ArrayList();
-                            list.AddRange(enrichedPrograms.Values);
-
-
-                            loopCount = list.Count / windowSize;
-                            for (int j = 0; j < loopCount + 1; j++)
-                            {
-                                int currentWindowSize = windowSize;
-                                if (list.Count < windowSize)
-                                {
-                                    currentWindowSize = list.Count;
-                                }
-                                int k = 0;
-                                GuideProgram[] progArray = new GuideProgram[currentWindowSize];
-
-                                log.DebugFormat("Importing shows from {0} to {1} (zero-based)", Convert.ToString(windowBase), Convert.ToString(windowBase + currentWindowSize));
-
-                                foreach (GuideProgram gp in list.GetRange(0, currentWindowSize))
-                                {
-
-                                    progArray[k] = (GuideProgram)gp;
-                                    k++;
-                                }
-
-                                tgsa.ImportPrograms(progArray, GuideSource.XmlTv);
-                                list.RemoveRange(0, currentWindowSize);
-                                windowBase += currentWindowSize;
-                            }
-                        }
+                        UpdateFTRGuideData(enrichedPrograms);
                     }
                     else
                     {
                         ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "No programs were enriched");
                         log.Debug("No programs were enriched");
                     }
-                    #endregion
 
                     #region Condense multiple series if they exist
                     string s = "";
@@ -326,47 +268,39 @@ namespace GuideEnricher
                     #endregion
 
                     #region Condense multiple episodes if they exist
-                    string e = "";
+                    string episodeName = string.Empty;
                     int intUniqueUnmatchedEpisodes = 0;
                     foreach (string ep in noEpisodeMatchList)
                     {
                         string currentEpisode = ep + " \\((?<timesfound>[0-9]+)\\)";
-                        int tiFound = 0;
+                        int tiFound;
                         Regex regexObj = new Regex(currentEpisode);
-                        if (regexObj.IsMatch(e))
+                        if (regexObj.IsMatch(episodeName))
                         {
-                            tiFound = Convert.ToInt32(regexObj.Match(e).Groups["timesfound"].Value);
+                            tiFound = Convert.ToInt32(regexObj.Match(episodeName).Groups["timesfound"].Value);
                             int intNowFound = tiFound + 1;
                             Regex rgx = new Regex(ep + " \\(" + tiFound + "\\)");
                             string replacePtrn = ep + " (" + intNowFound + ")";
-                            e = rgx.Replace(e, replacePtrn);
+                            episodeName = rgx.Replace(episodeName, replacePtrn);
                             // Successful match
                         }
                         else// Match attempt failed
                         {
                             intUniqueUnmatchedEpisodes++;
-                            if (e.Equals(""))
+                            if (episodeName.Equals(""))
                             {
-                                e += ep + " (1)"; //First Unmatche episode
+                                episodeName += ep + " (1)"; //First Unmatche episode
                             }
                             else
                             {
-                                e += ", " + ep + " (1)"; //Subsequent episodes 
+                                episodeName += ", " + ep + " (1)"; //Subsequent episodes 
                             }
                         }
                     } 
                     #endregion
 
-                    #region Truncate Series/Episodes not matched if necessary
-                    if (s.Length > 32000)
-                    {
-                        s = s.Substring(0, 32000);
-                    }
-                    if (e.Length > 32000)
-                    {
-                        e = e.Substring(0, 32000);
-                    } 
-                    #endregion
+                    s = s.TruncateString(32000);
+                    episodeName = episodeName.TruncateString(32000);
 
                     if (intUniqueUnmatchedSeries > 0)
                     {
@@ -376,12 +310,12 @@ namespace GuideEnricher
                     if (intUniqueUnmatchedEpisodes > 0)
                     {
                         ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, string.Format("There were {0} episodes that could not be matched.  See log for details", intUniqueUnmatchedEpisodes));
-                        log.ErrorFormat("The following episodes could not be matched: {0}", e);                    
+                        log.ErrorFormat("The following episodes could not be matched: {0}", episodeName);                    
                     }
 
-                    for (int x=0; x<9; x++)
+                    for (int x = 0; x < 9; x++)
                     {
-                        log.DebugFormat("Matching Function {0} matched a total of {1} episodes", x+1, intMatcher[x]);
+                        log.DebugFormat("Matching Function {0} matched a total of {1} episodes", x + 1, intMatcher[x]);
                     }
 
                     log.DebugFormat("{0} episodes already contained data, and were not matched.", intAlreadyEnriched);
@@ -390,12 +324,72 @@ namespace GuideEnricher
             }
             catch (Exception topEx)
             {
-                log.ErrorFormat("The main loop for GuideEnricher received this exception:\n{0}\n{1}", topEx.Message, topEx.StackTrace);
+                log.Error("The main loop for GuideEnricher received an exception", topEx);
             }
                     
         }
 
-        private void enrichSubroutine(GuideProgram prgProgram, ref List<Guid> uniqueProgramsOnly, ref ArrayList noSeriesMatchList, ref ArrayList noEpisodeMatchList, ref Hashtable enrichedPrograms)
+        private UpcomingRecording[] GetUpcomingRecordings()
+        {
+            UpcomingRecording[] upcomingRecs;
+            using(TvControlServiceAgent tcsa = new TvControlServiceAgent())
+            {
+                upcomingRecs = tcsa.GetAllUpcomingRecordings(UpcomingRecordingsFilter.Recordings, false);
+            }
+            return upcomingRecs;
+        }
+
+        private void UpdateFTRGuideData(Hashtable enrichedPrograms)
+        {
+            using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent())
+            {
+                String entryentries = "entries";
+                string waswere = "were";
+                if (enrichedPrograms.Count == 1)
+                {
+                    entryentries = "entry";
+                    waswere = "was";
+                }
+
+                log.DebugFormat("{0}: About to commit enriched guide data. {1} {2} {3} enriched", MODULE, Convert.ToString(enrichedPrograms.Count), entryentries, waswere);
+                this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, string.Format("About to commit enriched guide data. {0} entries were enriched.", enrichedPrograms.Count));
+
+                // update "windowSize" programs at a time to prevent the webservice from timing out
+                int windowBase = 0;
+                int windowSize = int.Parse(this.config.getProperty("maxShowNumberPerUpdate"));
+                int loopCount;
+
+                ArrayList list = new ArrayList();
+                list.AddRange(enrichedPrograms.Values);
+
+                loopCount = list.Count / windowSize;
+                for (int j = 0; j < loopCount + 1; j++)
+                {
+                    int currentWindowSize = windowSize;
+                    if (list.Count < windowSize)
+                    {
+                        currentWindowSize = list.Count;
+                    }
+                    int k = 0;
+                    GuideProgram[] progArray = new GuideProgram[currentWindowSize];
+
+                    log.DebugFormat("Importing shows from {0} to {1} (zero-based)", Convert.ToString(windowBase), Convert.ToString(windowBase + currentWindowSize));
+
+                    foreach (GuideProgram gp in list.GetRange(0, currentWindowSize))
+                    {
+
+                        progArray[k] = gp;
+                        k++;
+                    }
+
+                    tgsa.ImportPrograms(progArray, GuideSource.XmlTv);
+                    list.RemoveRange(0, currentWindowSize);
+                    windowBase += currentWindowSize;
+                }
+            }
+        }
+
+        public void EnrichSubroutine(GuideProgram prgProgram, ref List<Guid> uniqueProgramsOnly, ref ArrayList noSeriesMatchList, ref ArrayList noEpisodeMatchList, ref Hashtable enrichedPrograms)
         {
             GuideProgram prog;
             using (TvGuideServiceAgent tgsa = new TvGuideServiceAgent())
@@ -520,7 +514,7 @@ namespace GuideEnricher
 
         public void enrichTimer()
         {
-            string waittime = Config.getProperty("sleepTimeInHours");
+            string waittime = this.config.getProperty("sleepTimeInHours");
             if (waittime == null)
             {
                 waittime = "12";
@@ -538,7 +532,7 @@ namespace GuideEnricher
             {
                 ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "The Guide Enricher thread will pause for " + waittime + " hours");
                 Thread.Sleep(waittimeInt);
-                ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "Wait thread is awake and calling enrichGuideData...");
+                ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "Wait thread is awake and calling EnrichGuideDataJob...");
                 waitHandle.Set();
             }
         }

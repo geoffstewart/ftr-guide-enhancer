@@ -27,7 +27,7 @@ namespace GuideEnricher
 			// Here you can set properties on serviceProcessInstaller or register event handlers
 			serviceProcessInstaller.Account = ServiceAccount.LocalService;
 			
-			serviceInstaller.ServiceName = GuideEnricher.MyServiceName;
+			serviceInstaller.ServiceName = GuideEnricherService.MyServiceName;
 			this.Installers.AddRange(new Installer[] { serviceProcessInstaller, serviceInstaller });
 		}
 	}

@@ -18,10 +18,10 @@ namespace GuideEnricher
         public static void Main()
         {
             // This should be the production code, starts the service...
-            ServiceBase.Run(new ServiceBase[] { new GuideEnricher() });
+            ServiceBase.Run(new ServiceBase[] { new GuideEnricherService(Config.GetInstance()) });
             
             // Use the following when debuging from VS
-            //new GuideEnricher().Start();
+            //new GuideEnricherService().Start();
         }
     }
 }

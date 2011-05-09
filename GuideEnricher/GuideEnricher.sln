@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigTool", "ConfigTool\Co
 EndProject
 Project("{CFEE4113-1246-4D54-95CB-156813CB8593}") = "Installer", "Installer\Installer.wixproj", "{B8B5FC14-5075-4D5F-AC58-E093AF3DCDBB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuideEnricher.Tests", "GuideEnricher.Tests\GuideEnricher.Tests.csproj", "{C458DE87-A1FB-4C3F-8948-BA130DF34C40}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86

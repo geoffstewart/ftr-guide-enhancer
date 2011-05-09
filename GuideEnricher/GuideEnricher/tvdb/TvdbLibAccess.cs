@@ -26,8 +26,10 @@ namespace GuideEnricher.tvdb
     public class TvdbLibAccess
     {
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly IConfiguration config;
+
         private TvdbHandler tvdbHandler;
-        private Dictionary<string, string> seriesNameMapping = new Dictionary<string, string>();
+        private Dictionary<string, string> seriesNameMapping;
         private Dictionary<string, string> seriesNameRegex = new Dictionary<string, string>();
         private List<string> seriesIgnore = new List<string>();
 
@@ -37,29 +39,39 @@ namespace GuideEnricher.tvdb
 
         public static string IGNORED = "-IGNORED-"; // not likely a series will be called this
 
-        public TvdbLibAccess()
+        public TvdbLibAccess(IConfiguration configuration)
         {
+            this.config = configuration;
             init();
         }
 
         private void init()
         {
-            string cache = Config.getProperty("TvDbLibCache");
+            string cache = this.config.getProperty("TvDbLibCache");
             string tvdbid = "BBB734ABE146900D";  // mine, don't abuse it!!!
             tvdbHandler = new TvdbHandler(new XmlCacheProvider(cache), tvdbid);
             tvdbHandler.InitCache();
 
-            seriesNameMapping = Config.getSeriesNameMap();
-            seriesIgnore = Config.getIgnoredSeries();
+            seriesNameMapping = this.config.getSeriesNameMap();
+            seriesIgnore = this.config.getIgnoredSeries();
 
             this.language = SetLanguage();
 
-            // initialize any regex mappings
-            foreach (string regex in seriesNameMapping.Keys)
+            this.IntializeRegexMappings();
+        }
+
+        private void IntializeRegexMappings()
+        {
+            if (this.seriesNameMapping == null)
+            {
+                return;
+            }
+
+            foreach (string regex in this.seriesNameMapping.Keys)
             {
                 if (regex.StartsWith("regex="))
                 {
-                    this.seriesNameRegex.Add(regex, seriesNameMapping[regex]);
+                    this.seriesNameRegex.Add(regex, this.seriesNameMapping[regex]);
                 }
             }
         }
@@ -67,7 +79,7 @@ namespace GuideEnricher.tvdb
         private TvdbLanguage SetLanguage()
         {
             List<TvdbLanguage> availableLanguages = this.tvdbHandler.Languages;
-            string selectedLanguage = Config.getProperty("TvDbLanguage");
+            string selectedLanguage = this.config.getProperty("TvDbLanguage");
             
             // if there is a value for TvDbLanguage in the settings, set the right language
             if (string.IsNullOrEmpty(selectedLanguage))
@@ -95,6 +107,7 @@ namespace GuideEnricher.tvdb
                 log.DebugFormat("SD-TvDb: Series cache hit: {0} has id: {1}", seriesName, seriesCache[seriesName]);
                 return seriesCache[seriesName];
             }
+
             if (seriesNameMapping.ContainsKey(seriesName))
             {
                 if (this.seriesIgnore.Contains(seriesName))
@@ -247,7 +260,7 @@ namespace GuideEnricher.tvdb
                 if (!String.IsNullOrEmpty(result))
                 {
                     log.Debug("Matched using recurse [7]");
-                    GuideEnricher.matchingSuccess(7);
+                    GuideEnricherService.matchingSuccess(7);
                     return result;
                 }
             }
@@ -266,7 +279,7 @@ namespace GuideEnricher.tvdb
                 result = getSeasonEpisode(seriesName, seriesId, episodeName, true);
                 if (!String.IsNullOrEmpty(result))
                 {
-                    GuideEnricher.matchingSuccess(8);
+                    GuideEnricherService.matchingSuccess(8);
                     return result;
                 }
                 
@@ -350,10 +363,10 @@ namespace GuideEnricher.tvdb
 
                     if (range != 99)
                     {
-                        if (range > 0) GuideEnricher.matchingSuccess(3);
-                        else GuideEnricher.matchingSuccess(5);
+                        if (range > 0) GuideEnricherService.matchingSuccess(3);
+                        else GuideEnricherService.matchingSuccess(5);
                     }
-                    else GuideEnricher.matchingSuccess(0);
+                    else GuideEnricherService.matchingSuccess(0);
 
                     log.DebugFormat("Compare function success (Listing <==> Database): {0} <==> {1}, NOT ALTERED", episodeName, e.EpisodeName);
                     return ret;
@@ -440,10 +453,10 @@ namespace GuideEnricher.tvdb
                     
                     if (range != 99)
                     {
-                        if (range > 0) GuideEnricher.matchingSuccess(4);
-                        else GuideEnricher.matchingSuccess(6);                
+                        if (range > 0) GuideEnricherService.matchingSuccess(4);
+                        else GuideEnricherService.matchingSuccess(6);                
                     }
-                    else GuideEnricher.matchingSuccess(1);
+                    else GuideEnricherService.matchingSuccess(1);
 
                     log.DebugFormat("Compare function success (Listing <==> Database): {0} <==> {1}, Altered String Match {2} <==> {3}", episodeName, e.EpisodeName, e1, e2);
                     return ret;
@@ -470,7 +483,7 @@ namespace GuideEnricher.tvdb
                     int sn = e.SeasonNumber;
                     int ep = e.EpisodeNumber;
                     string ret = FormatSeasonAndEpisode(sn, ep);
-                    GuideEnricher.matchingSuccess(2);
+                    GuideEnricherService.matchingSuccess(2);
                     log.DebugFormat("Compare function (3) Success (Listing <==> Database): {0}  <==> {1}, Altered string Match {2} <==> {3}", episodeName, e.EpisodeName, desperateEpisode1, desperateEpisode2);
                     return ret;
                 }

@@ -16,6 +16,7 @@ namespace GuideEnricher
 
             Thread.Sleep(2000);
 
+            var config = Config.GetInstance();
             ServerSettings serverSettings = new ServerSettings();
             serverSettings.ServerName = "ganymed";
             serverSettings.Transport = ServiceTransport.NetTcp;
@@ -23,14 +24,14 @@ namespace GuideEnricher
 
             ServiceChannelFactories.Initialize(serverSettings, false);
 
-            ServiceHost sh = ForTheRecordListener.CreateServiceHost(Config.getProperty("serviceUrl"));
+            ServiceHost sh = ForTheRecordListener.CreateServiceHost(config.getProperty("serviceUrl"));
 
             sh.Open();
 
             using (ForTheRecordServiceAgent agent = new ForTheRecordServiceAgent())
             {
                 ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents;
-                agent.EnsureEventListener(eventGroupsToListenTo, Config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
+                agent.EnsureEventListener(eventGroupsToListenTo, config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
                 Console.Read();
             }
 
