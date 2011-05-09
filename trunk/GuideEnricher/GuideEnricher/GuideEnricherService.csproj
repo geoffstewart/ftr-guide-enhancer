@@ -95,7 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config.cs" />
-    <Compile Include="DataEnricherException.cs" />
+    <Compile Include="exception\DataEnricherException.cs" />
     <Compile Include="IDataEnricher.cs" />
     <Compile Include="DataEnricherFactory.cs" />
     <Compile Include="DataEnricherImpl.cs" />

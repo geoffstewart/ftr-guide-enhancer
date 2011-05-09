@@ -6,12 +6,9 @@
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
-using System;
-using System.Runtime.Serialization;
-
 namespace GuideEnricher.Exceptions
 {
-   /// <summary>
+    /// <summary>
    /// Desctiption of NoSeriesMatchException.
    /// </summary>
    public class NoSeriesMatchException : DataEnricherException

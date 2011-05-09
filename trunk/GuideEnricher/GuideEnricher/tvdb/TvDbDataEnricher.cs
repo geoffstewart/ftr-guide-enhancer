@@ -10,7 +10,7 @@ namespace GuideEnricher.tvdb
 {
     using System;
     using System.Reflection;
-    using global::GuideEnricher.Exceptions;
+    using Exceptions;
     using log4net;
 
     /// <summary>
@@ -25,7 +25,6 @@ namespace GuideEnricher.tvdb
         public TvDbDataEnricher()
         {
             tvdblib = new TvdbLibAccess();
-
         }
 
         public void close()

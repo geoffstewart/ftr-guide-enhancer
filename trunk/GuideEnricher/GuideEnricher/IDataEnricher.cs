@@ -6,18 +6,16 @@
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
-using System;
-using ForTheRecord.Entities;
-
 namespace GuideEnricher
 {
-   /// <summary>
+    using ForTheRecord.Entities;
+
+    /// <summary>
    /// Description of DataEnricher.
    /// </summary>
    public interface IDataEnricher
    {
       IProgramSummary enrichProgram(IProgramSummary existingProgram);
       void close();
-      
    }
 }
