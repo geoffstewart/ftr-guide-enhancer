@@ -6,19 +6,17 @@
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
-using System;
-using System.Text;
-using System.Text.RegularExpressions;
-using TvdbLib;
-using TvdbLib.Cache;
-using TvdbLib.Data;
-using System.Collections.Generic;
-using System.Collections;
-
 namespace GuideEnricher.tvdb
 {
+    using System;
+    using System.Collections.Generic;
     using System.Reflection;
+    using System.Text;
+    using System.Text.RegularExpressions;
     using log4net;
+    using TvdbLib;
+    using TvdbLib.Cache;
+    using TvdbLib.Data;
 
     /// <summary>
     /// Description of TvdbLibAccess.
@@ -27,6 +25,7 @@ namespace GuideEnricher.tvdb
     {
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IConfiguration config;
+        private const int cnstIntRange = 20;
 
         private TvdbHandler tvdbHandler;
         private Dictionary<string, string> seriesNameMapping;
@@ -38,6 +37,8 @@ namespace GuideEnricher.tvdb
         private TvdbLanguage language = TvdbLanguage.DefaultLanguage;
 
         public static string IGNORED = "-IGNORED-"; // not likely a series will be called this
+
+        private enum tailOrShort { Regular, Short, Tail };
 
         public TvdbLibAccess(IConfiguration configuration)
         {
@@ -228,12 +229,12 @@ namespace GuideEnricher.tvdb
             int SHORTMATCH = 20;
 
             #region Compare Function 4 - Short
-            result = comp1_DirectMatch(episodeName, episodeList, SHORTMATCH);
+            result = comp1_DirectMatch(episodeName, episodeList, tailOrShort.Regular);
             if (!String.IsNullOrEmpty(result)) return result;
             #endregion
 
             #region Compare Function 5 - Short
-            result = comp2_RemovePunctuation(episodeName, episodeList, SHORTMATCH);
+            result = comp2_RemovePunctuation(episodeName, episodeList, tailOrShort.Regular);
             if (!String.IsNullOrEmpty(result)) return result;
             #endregion
             #endregion
@@ -241,12 +242,12 @@ namespace GuideEnricher.tvdb
             #region Tail Matching Attempts
 
             #region Compare Function 6 - Tail
-            result = comp1_DirectMatch(episodeName, episodeList, -SHORTMATCH);
+            result = comp1_DirectMatch(episodeName, episodeList, tailOrShort.Regular);
             if (!String.IsNullOrEmpty(result)) return result;
             #endregion
 
             #region Compare Function 7 - Tail
-            result = comp2_RemovePunctuation(episodeName, episodeList, -SHORTMATCH);
+            result = comp2_RemovePunctuation(episodeName, episodeList, tailOrShort.Regular);
             if (!String.IsNullOrEmpty(result)) return result;
             #endregion 
             #endregion
@@ -293,35 +294,35 @@ namespace GuideEnricher.tvdb
 
         private string comp1_DirectMatch(string episodeName, List<TvdbEpisode> el)
         {
-            return comp1_DirectMatch(episodeName, el, 99);
+            return comp1_DirectMatch(episodeName, el, tailOrShort.Regular);
         }
 
-        private string comp1_DirectMatch(string episodeName, List<TvdbEpisode> el, int range)
+        private string comp1_DirectMatch(string episodeName, List<TvdbEpisode> el, tailOrShort limiter)
         {
             #region Allow for short/tail match in episode name
-            if (range != 99)
+            if (!limiter.Equals(tailOrShort.Regular))
             {
-                if (range > 0)
+                if (episodeName.Length >= cnstIntRange)
                 {
-                    if (episodeName.Length >= range)
+                    if (limiter.Equals(tailOrShort.Short))
                     {
-                        episodeName = episodeName.Substring(0, range);
-                        log.DebugFormat("Compare function (4) - Short Match Test (First {0} Charcters of Episode Name)", range);
+                        episodeName = episodeName.Substring(0, cnstIntRange);
+                        log.DebugFormat("Compare function (4) - Short Match Test (First {0} Charcters of Episode Name)", cnstIntRange);
                     }
                     else
                     {
-                        log.DebugFormat("Ineligible for Compare function (4): Episode name is shorter than {0} charachters.", range);
+                        log.DebugFormat("Ineligible for Compare function (4): Episode name is shorter than {0} charachters.", cnstIntRange);
                         return string.Empty;
                     }
                 }
-                else if (episodeName.Length >= -range)
+                else if (limiter.Equals(tailOrShort.Tail))
                 {
-                    episodeName = episodeName.Substring(episodeName.Length + range);
-                    log.DebugFormat("Compare function (6) - Tail Match Test (Last {0} charcters of Episode Name)", -range);
+                    episodeName = episodeName.Substring(episodeName.Length + cnstIntRange);
+                    log.DebugFormat("Compare function (6) - Tail Match Test (Last {0} charcters of Episode Name)", cnstIntRange);
                 }
                 else
                 {
-                    log.DebugFormat("Ineligible for Compare function (6): Episode name is shorter than {0} charachters", -range);
+                    log.DebugFormat("Ineligible for Compare function (6): Episode name is shorter than {0} charachters", cnstIntRange);
                     return string.Empty;
                 }
             }
@@ -331,27 +332,22 @@ namespace GuideEnricher.tvdb
             {
                 String tvdbEpisodeName = e.EpisodeName;
                 #region Allow for short/tail mtch in database episode name
-                if (range != 99)
+                if (!limiter.Equals(tailOrShort.Regular))
                 {
-                    if (range > 0)
+                    if (tvdbEpisodeName.Length >= cnstIntRange)
                     {
-                        if (tvdbEpisodeName.Length >= range)
+                        if (limiter.Equals(tailOrShort.Short))
                         {
-                            tvdbEpisodeName = tvdbEpisodeName.Substring(0, range);
+                            tvdbEpisodeName = tvdbEpisodeName.Substring(0, cnstIntRange);
+                            log.DebugFormat("Compare function (4) - Short Match Test (First {0} Charcters of Episode Name)", cnstIntRange);
                         }
-                        else
+                        else if (limiter.Equals(tailOrShort.Tail))
                         {
-                            continue;
+                            tvdbEpisodeName = tvdbEpisodeName.Substring(episodeName.Length - cnstIntRange);
+                            log.DebugFormat("Compare function (6) - Tail Match Test (Last {0} charcters of Episode Name)", cnstIntRange);
                         }
                     }
-                    else if (tvdbEpisodeName.Length >= -range)
-                    {
-                        tvdbEpisodeName = tvdbEpisodeName.Substring(tvdbEpisodeName.Length + range);
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                    else if (limiter.Equals(tailOrShort.Short) || limiter.Equals(tailOrShort.Tail)) continue;
                 }
                 #endregion
 
@@ -361,12 +357,9 @@ namespace GuideEnricher.tvdb
                     int ep = e.EpisodeNumber;
                     string ret = FormatSeasonAndEpisode(sn, ep);
 
-                    if (range != 99)
-                    {
-                        if (range > 0) GuideEnricherService.matchingSuccess(3);
-                        else GuideEnricherService.matchingSuccess(5);
-                    }
-                    else GuideEnricherService.matchingSuccess(0);
+                    if (limiter.Equals(tailOrShort.Regular)) GuideEnricherService.matchingSuccess(0);
+                    else if (limiter.Equals(tailOrShort.Short)) GuideEnricherService.matchingSuccess(3);
+                    else GuideEnricherService.matchingSuccess(5);
 
                     log.DebugFormat("Compare function success (Listing <==> Database): {0} <==> {1}, NOT ALTERED", episodeName, e.EpisodeName);
                     return ret;
@@ -377,35 +370,35 @@ namespace GuideEnricher.tvdb
 
         private string comp2_RemovePunctuation(string episodeName, List<TvdbEpisode> el)
         {
-            return comp2_RemovePunctuation(episodeName, el, 99);
+            return comp2_RemovePunctuation(episodeName, el, tailOrShort.Regular);
         }
 
-        private string comp2_RemovePunctuation(string episodeName, List<TvdbEpisode> el, int range)
+        private string comp2_RemovePunctuation(string episodeName, List<TvdbEpisode> el, tailOrShort limiter)
         {
             #region Allow for short/tail match in episode name
-            if (range != 99)
+            if (!limiter.Equals(tailOrShort.Regular))
             {
-                if (range > 0)
+                if (episodeName.Length >= cnstIntRange)
                 {
-                    if (episodeName.Length >= range)
+                    if (limiter.Equals(tailOrShort.Short))
                     {
-                        episodeName = episodeName.Substring(0, range);
-                        log.DebugFormat("Compare function (5) - Short Match Test (First {0} Charcters of Episode Name).", range);
+                        episodeName = episodeName.Substring(0, cnstIntRange);
+                        log.DebugFormat("Compare function (5) - Short Match Test (First {0} Charcters of Episode Name)", cnstIntRange);
                     }
-                    else
+                    if (limiter.Equals(tailOrShort.Tail))
                     {
-                        log.DebugFormat("Ineligible for Compare function (5): Episode name is shorter than {0} characters.", range);
-                        return string.Empty;
+                        episodeName = episodeName.Substring(episodeName.Length - cnstIntRange);
+                        log.DebugFormat("Compare function (7) - Tail Match Test (Last {0} charcters of Episode Name)", cnstIntRange);
                     }
                 }
-                else if (episodeName.Length >= -range)
+                else if (limiter.Equals(tailOrShort.Short))
                 {
-                    episodeName = episodeName.Substring(episodeName.Length + range);
-                    log.DebugFormat("Compare function (7) - Tail Match Test (Last {0} characters of Episode Name)", -range);
+                    log.DebugFormat("Ineligible for Compare function (5): Episode name is shorter than {0} charachters.", cnstIntRange);
+                    return string.Empty;
                 }
-                else
+                else if (limiter.Equals(tailOrShort.Tail))
                 {
-                    log.DebugFormat("Ineligible for Compare function (7): Episode name is shorter than {0} characters", -range);
+                    log.DebugFormat("Ineligible for Compare function (7): Episode name is shorter than {0} charachters.", cnstIntRange);
                     return string.Empty;
                 }
             }
@@ -417,27 +410,20 @@ namespace GuideEnricher.tvdb
 
                 String tvdbEpisodeName = e.EpisodeName;
                 #region Allow for short/tail match in database episode name
-                if (range != 99)
+                if (!limiter.Equals(tailOrShort.Regular))
                 {
-                    if (range > 0)
+                    if (tvdbEpisodeName.Length >= cnstIntRange)
                     {
-                        if (tvdbEpisodeName.Length >= range)
+                        if (limiter.Equals(tailOrShort.Short))
                         {
-                            tvdbEpisodeName = tvdbEpisodeName.Substring(0, range);
+                            tvdbEpisodeName = tvdbEpisodeName.Substring(0, cnstIntRange);
                         }
-                        else
+                        if (limiter.Equals(tailOrShort.Tail))
                         {
-                            continue;
+                            tvdbEpisodeName = tvdbEpisodeName.Substring(episodeName.Length - cnstIntRange);
                         }
                     }
-                    else if (tvdbEpisodeName.Length >= -range)
-                    {
-                        tvdbEpisodeName = tvdbEpisodeName.Substring(episodeName.Length + range);
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                    else if (limiter.Equals(tailOrShort.Short) || limiter.Equals(tailOrShort.Tail)) continue;
                 }
                 #endregion
 
@@ -451,12 +437,9 @@ namespace GuideEnricher.tvdb
                     int ep = e.EpisodeNumber;
                     string ret = FormatSeasonAndEpisode(sn, ep);
                     
-                    if (range != 99)
-                    {
-                        if (range > 0) GuideEnricherService.matchingSuccess(4);
-                        else GuideEnricherService.matchingSuccess(6);                
-                    }
-                    else GuideEnricherService.matchingSuccess(1);
+                    if (limiter.Equals(tailOrShort.Regular)) GuideEnricherService.matchingSuccess(1);
+                    else if (limiter.Equals(tailOrShort.Short)) GuideEnricherService.matchingSuccess(4);
+                    else GuideEnricherService.matchingSuccess(6);
 
                     log.DebugFormat("Compare function success (Listing <==> Database): {0} <==> {1}, Altered String Match {2} <==> {3}", episodeName, e.EpisodeName, e1, e2);
                     return ret;
