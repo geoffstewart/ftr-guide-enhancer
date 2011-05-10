@@ -28,12 +28,12 @@
         [Test]
         public void TestEnricherWithAbsoluteEpisodeNumber()
         {
-            // I know this one fails, need some examples of actual guide entries...
+            // I know this one fails, need to add series map for this one "Castle (2009)"
             var program = new GuideProgram();
-            program.Title = "The Big Bang Theory";
-            program.SubTitle = "66";
+            program.Title = "Castle";
+            program.SubTitle = "Pretty Dead (59)";
             this.enricher.enrichProgram(program);
-            Assert.AreEqual("S04E03", program.EpisodeNumberDisplay);
+            Assert.AreEqual("S03E23", program.EpisodeNumberDisplay);
         }
     }
 }
