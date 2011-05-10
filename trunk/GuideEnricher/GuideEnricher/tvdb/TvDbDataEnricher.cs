@@ -41,6 +41,7 @@ namespace GuideEnricher.tvdb
             log.DebugFormat("{0}: Starting lookup for {1} - {2}", MODULE, seriesName, episodeName);
             string seriesId = tvdblib.getSeriesId(seriesName);
 
+            // TODO: Should we realy throw an exception here?
             if(seriesId.Length == 0)
             {
                 log.DebugFormat("{0}: Cannot find series ID for {1}", MODULE, seriesName);

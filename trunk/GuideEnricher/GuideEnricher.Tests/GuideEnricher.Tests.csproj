@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="EnrichTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestProgram.cs" />
     <Compile Include="TVDBLibEnrichTest.cs" />
   </ItemGroup>
   <ItemGroup>
