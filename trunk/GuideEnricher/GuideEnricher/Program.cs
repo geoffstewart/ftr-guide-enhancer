@@ -21,7 +21,7 @@ namespace GuideEnricher
             ServiceBase.Run(new ServiceBase[] { new GuideEnricherService(Config.GetInstance()) });
             
             // Use the following when debuging from VS
-            //new GuideEnricherService().Start();
-        }
+            //new GuideEnricherService(Config.GetInstance()).Start();
+        }             
     }
 }
