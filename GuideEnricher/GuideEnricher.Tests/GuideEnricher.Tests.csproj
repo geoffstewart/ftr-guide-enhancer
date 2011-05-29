@@ -51,6 +51,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ForTheRecord.Entities, Version=1.6.0.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
@@ -60,6 +61,14 @@
     <Reference Include="ForTheRecord.ServiceAgents, Version=1.6.0.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GuideEnricher\References\ForTheRecord.ServiceAgents.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GuideEnricher\References\Log4Net\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Moq, Version=4.0.10827.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GuideEnricher\References\Moq\Moq.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework, Version=2.5.7.10213, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -77,18 +86,14 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TvdbLib, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EnrichTests.cs" />
+    <Compile Include="MatchMethodTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestProgram.cs" />
     <Compile Include="TVDBLibEnrichTest.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GuideEnricher\GuideEnricherService.csproj">
-      <Project>{9D718DA7-3160-4968-8048-361D7C1F3009}</Project>
-      <Name>GuideEnricherService</Name>
-    </ProjectReference>
+    <Compile Include="TVEpisodeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -106,6 +111,12 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GuideEnricher\GuideEnricherService.csproj">
+      <Project>{9D718DA7-3160-4968-8048-361D7C1F3009}</Project>
+      <Name>GuideEnricherService</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

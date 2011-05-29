@@ -11,54 +11,109 @@ namespace GuideEnricher.tvdb
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-    using System.Text;
     using System.Text.RegularExpressions;
+    using GuideEnricher.EpisodeMatchMethods;
+    using GuideEnricher.Exceptions;
     using log4net;
     using TvdbLib;
     using TvdbLib.Cache;
     using TvdbLib.Data;
+    using TvdbLib.Exceptions;
 
     /// <summary>
     /// Description of TvdbLibAccess.
     /// </summary>
-    public class TvdbLibAccess
+    public class TvdbLibAccess: IDisposable
     {
+        private const string TVDBID = "BBB734ABE146900D";  // mine, don't abuse it!!!
+        private const string MODULE = "GuideEnricher";
+        
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IConfiguration config;
-        private const int cnstIntRange = 20;
+        private readonly List<IEpisodeMatchMethod> matchMethods;
 
         private TvdbHandler tvdbHandler;
         private Dictionary<string, string> seriesNameMapping;
         private Dictionary<string, string> seriesNameRegex = new Dictionary<string, string>();
         private List<string> seriesIgnore = new List<string>();
 
-        private Dictionary<string, string> seriesCache = new Dictionary<string, string>();
+        private Dictionary<string, int> seriesCache = new Dictionary<string, int>();
 
         private TvdbLanguage language = TvdbLanguage.DefaultLanguage;
 
-        public static string IGNORED = "-IGNORED-"; // not likely a series will be called this
-
-        private enum tailOrShort { Regular, Short, Tail };
-
-        public TvdbLibAccess(IConfiguration configuration)
+        public TvdbLibAccess(IConfiguration configuration, List<IEpisodeMatchMethod> matchMethods)
         {
             this.config = configuration;
-            init();
+            this.matchMethods = matchMethods;
+            this.Init();
         }
 
-        private void init()
+        private void Init()
         {
             string cache = this.config.getProperty("TvDbLibCache");
-            string tvdbid = "BBB734ABE146900D";  // mine, don't abuse it!!!
-            tvdbHandler = new TvdbHandler(new XmlCacheProvider(cache), tvdbid);
+            tvdbHandler = new TvdbHandler(new XmlCacheProvider(cache), TVDBID);
             tvdbHandler.InitCache();
 
             seriesNameMapping = this.config.getSeriesNameMap();
             seriesIgnore = this.config.getIgnoredSeries();
-
             this.language = SetLanguage();
-
             this.IntializeRegexMappings();
+        }
+
+        public void EnrichProgram(EnrichedGuideProgram existingProgram)
+        {
+            log.DebugFormat("Starting lookup for {0} - {1}", existingProgram.Title, existingProgram.SubTitle);
+            var seriesId = this.getSeriesId(existingProgram.Title);
+
+            TvdbSeries tvdbSeries = null;
+            bool callSuccessful = false;
+            int attemptNumber = 0;
+            while (attemptNumber++ < 3 && !callSuccessful)
+            {
+                try
+                {
+                    tvdbSeries = tvdbHandler.GetSeries(seriesId, language, true, false, false);
+                    callSuccessful = true;
+                }
+                catch (TvdbException tvdbException)
+                {
+                    log.Debug("TVDB Error getting series", tvdbException);
+                }
+            }
+
+            if (tvdbSeries == null)
+            {
+                log.ErrorFormat("TVDB issue getting series info for {0}", existingProgram.Title);
+                return;
+            }
+
+            if (config.getProperty("dumpepisodes").ToUpper() == "TRUE")
+            {
+                this.DumpSeriesEpisodes(tvdbSeries, tvdbSeries.Episodes);
+            }
+
+            foreach (var matchMethod in this.matchMethods)
+            {
+                if (matchMethod.Match(existingProgram, tvdbSeries.Episodes))
+                {
+                    existingProgram.Matched = true;
+                    break;
+                }
+            }
+        }
+
+        private void DumpSeriesEpisodes(TvdbSeries series, List<TvdbEpisode> episodes)
+        {
+            this.log.InfoFormat("Dumping episode info for {0}", series.SeriesName);
+            foreach (var episode in episodes)
+            {
+                this.log.InfoFormat("S{0:00}E{1:00}-{2}", episode.SeasonNumber, episode.EpisodeNumber, episode.EpisodeName);
+            }
+        }
+
+        public void Dispose()
+        {
+            this.closeCache();
         }
 
         private void IntializeRegexMappings()
@@ -72,7 +127,7 @@ namespace GuideEnricher.tvdb
             {
                 if (regex.StartsWith("regex="))
                 {
-                    this.seriesNameRegex.Add(regex, this.seriesNameMapping[regex]);
+                    this.seriesNameRegex.Add(regex.Substring(6), this.seriesNameMapping[regex]);
                 }
             }
         }
@@ -98,401 +153,92 @@ namespace GuideEnricher.tvdb
             tvdbHandler.CloseCache();
         }
 
-        public string getSeriesId(string seriesName)
+        public int getSeriesId(string seriesName)
         {
-            string searchSeries = seriesName;
+            // TODO: A few things here.  We should add more intelligence when there is more then 1 match
+            // Things like default to (US) or (UK) or what ever is usally the case.  Also, perhaps a global setting that would always take newest series first...
 
-            // check cache first
+            if (seriesName.StartsWith("id="))
+            {
+                var seriesid = Convert.ToInt32(seriesName.Substring(3));
+                log.DebugFormat("SD-TvDb: Direct mapping: series: {0} id: {1}", seriesName, seriesid);
+                return seriesid;
+            }
+            
             if (seriesCache.ContainsKey(seriesName))
             {
                 log.DebugFormat("SD-TvDb: Series cache hit: {0} has id: {1}", seriesName, seriesCache[seriesName]);
                 return seriesCache[seriesName];
             }
 
-            if (seriesNameMapping.ContainsKey(seriesName))
+            ThrowIfSeriesIgnored(seriesName);
+
+            string searchSeries = seriesName;
+
+            if (IsSeriesInMappedSeries(seriesName))
             {
-                if (this.seriesIgnore.Contains(seriesName))
-                {
-                    return IGNORED;
-                }
                 searchSeries = this.seriesNameMapping[seriesName];
             }
             else if (this.seriesNameRegex.Count > 0)
             {
-                // compare the incoming seriesName to see if it matches a regex mapping
                 foreach (string regexEntry in seriesNameRegex.Keys)
                 {
-                    // get rid of regex=
-                    string regex = regexEntry.Substring(6);
-                    Regex re = new Regex(regex);
-                    if (re.IsMatch(seriesName))
+                    var regex = new Regex(regexEntry);
+                    if (regex.IsMatch(seriesName))
                     {
-                        if (this.seriesIgnore.Contains(regexEntry))
-                        {
-                            return IGNORED;
-                        }
                         searchSeries = seriesNameRegex[regexEntry];
-                        log.DebugFormat("SD-TvDb: Regex mapping: series: {0} regex: {1} seriesMatch: {2}", seriesName, regex, searchSeries);
-                        
+                        log.DebugFormat("SD-TvDb: Regex mapping: series: {0} regex: {1} seriesMatch: {2}", seriesName, regexEntry, searchSeries);
                         break;
                     }
                 }
             }
-            if (searchSeries.StartsWith("id="))
-            {
-                // we're doing a direct mapping from series to tvdb.com id
-                string seriesid = searchSeries.Substring(3);
-                log.DebugFormat("SD-TvDb: Direct mapping: series: {0} id: {1}", seriesName, seriesid);
-                return seriesid;
-            }
 
-            List<TvdbSearchResult> l = tvdbHandler.SearchSeries(searchSeries);
+            List<TvdbSearchResult> searchResults = tvdbHandler.SearchSeries(searchSeries);
 
-            log.DebugFormat("SD-TvDb: Search for {0} return {1} results", searchSeries, l.Count);
+            log.DebugFormat("SD-TvDb: Search for {0} return {1} results", searchSeries, searchResults.Count);
             
-            if (l.Count >= 1)
+            if (searchResults.Count >= 1)
             {
-                for (int i = 0; i < l.Count; i++)
+                for (int i = 0; i < searchResults.Count; i++)
                 {
-                    //Log.WriteFile("seriesin: " + seriesName.ToLower() + "   result: " + l[0].SeriesName.ToLower());
-                    if (searchSeries.ToLower().Equals(l[i].SeriesName.ToLower()))
+                    if (searchSeries.ToLower().Equals(searchResults[i].SeriesName.ToLower()))
                     {
-                        string id = "" + l[i].Id;
-                        log.DebugFormat("SD-TvDb: series: {0} id: {1}", searchSeries, id);
-                        // add to cache
-                        seriesCache.Add(seriesName, id);
-
-                        return id;
+                        var seriesId = searchResults[i].Id;
+                        log.DebugFormat("SD-TvDb: series: {0} id: {1}", searchSeries, seriesId);
+                        seriesCache.Add(seriesName, seriesId);
+                        return seriesId;
                     }
                 }
 
                 log.DebugFormat("SD-TvDb: Could not find series match: {0} renamed {1}", seriesName, searchSeries);
             }
-            
-            return string.Empty;
+
+            log.DebugFormat("Cannot find series ID for {0}", seriesName);
+            throw new NoSeriesMatchException();
         }
 
-        public string getSeasonEpisode(string seriesName, string seriesId, string episodeName)
+        private void ThrowIfSeriesIgnored(string seriesName)
         {
-            return getSeasonEpisode(seriesName, seriesId, episodeName, false);
+            if (this.seriesIgnore == null)
+            {
+                return;
+            }
+
+            if (this.seriesIgnore.Contains(seriesName))
+            {
+                this.log.DebugFormat("{0}: Series {1} is ignored", MODULE, seriesName);
+                throw new SeriesIgnoredException();
+            }
         }
 
-        public string getSeasonEpisode(string seriesName, string seriesId, string episodeName, bool recurseCall)
+        private bool IsSeriesInMappedSeries(string seriesName)
         {
-            if (string.IsNullOrEmpty(seriesId))
+            if (this.seriesNameMapping == null)
             {
-                return string.Empty;
-            }
-            
-		    TvdbSeries s = tvdbHandler.GetSeries(Convert.ToInt32(seriesId), language, true, false, false);
-            List<TvdbEpisode> episodeList = s.Episodes;
-
-            // TODO: Look at this logic
-            if (!recurseCall)
-            {
-                // We shouldn't need so much logging.  Uncomment just for debugging before release.
-//                foreach (TvdbEpisode e in episodeList)
-//                {
-//                    log.DebugFormat("({0}) : {1} =?= {2}", episodeList.IndexOf(e), episodeName, e.EpisodeName);
-//                }
-            } 
-
-            #region Compare Function 1
-            string result = this.comp1_DirectMatch(episodeName, episodeList);
-            if (!String.IsNullOrEmpty(result))
-            {
-                log.Debug("Matched using Direct Episode Match [1]");
-                return result;
-            }
-            #endregion
-
-            #region Compare Function 2
-            result = comp2_RemovePunctuation(episodeName, episodeList);
-            if (!String.IsNullOrEmpty(result))
-            {
-                log.Debug("Matched using Punctuation Removed Test [2]");
-                return result;
-            }
-            #endregion
-
-            #region Compare Function 3
-            result =  compX_RegExStripper(episodeName, episodeList);
-            if (!String.IsNullOrEmpty(result))
-            {
-                log.Debug("Matched using Regex Cleanup [3]");
-                return result;
-            }
-            #endregion
-
-            #region Short Matching Attempts
-
-            int SHORTMATCH = 20;
-
-            #region Compare Function 4 - Short
-            result = comp1_DirectMatch(episodeName, episodeList, tailOrShort.Regular);
-            if (!String.IsNullOrEmpty(result)) return result;
-            #endregion
-
-            #region Compare Function 5 - Short
-            result = comp2_RemovePunctuation(episodeName, episodeList, tailOrShort.Regular);
-            if (!String.IsNullOrEmpty(result)) return result;
-            #endregion
-            #endregion
-
-            #region Tail Matching Attempts
-
-            #region Compare Function 6 - Tail
-            result = comp1_DirectMatch(episodeName, episodeList, tailOrShort.Regular);
-            if (!String.IsNullOrEmpty(result)) return result;
-            #endregion
-
-            #region Compare Function 7 - Tail
-            result = comp2_RemovePunctuation(episodeName, episodeList, tailOrShort.Regular);
-            if (!String.IsNullOrEmpty(result)) return result;
-            #endregion 
-            #endregion
-
-            #region Multiple episode search 7
-            // check for multiple episodes... assume separated by ;
-            if (!recurseCall && episodeName.Contains(";"))
-            {
-                string firstEpisode = episodeName.Substring(0, episodeName.IndexOf(';'));
-                result = getSeasonEpisode(seriesName, seriesId, firstEpisode, true);
-                if (!String.IsNullOrEmpty(result))
-                {
-                    log.Debug("Matched using recurse [7]");
-                    GuideEnricherService.matchingSuccess(7);
-                    return result;
-                }
-            }
-            else
-            {
-                log.Debug("Compare function (9) skipped - Split episode not detected!");
-            }
-            #endregion
-
-            #region Forced update recursion 8
-            if (!recurseCall)
-            {
-                log.Debug("Compare function (8) - All tests failed. Recursing after a forced theTvDb update.");
-                TvdbSeries tvdbSeries = this.tvdbHandler.GetFullSeries(Convert.ToInt32(seriesId), language, false);
-                this.tvdbHandler.ForceReload(tvdbSeries, true, true, false);
-                result = getSeasonEpisode(seriesName, seriesId, episodeName, true);
-                if (!String.IsNullOrEmpty(result))
-                {
-                    GuideEnricherService.matchingSuccess(8);
-                    return result;
-                }
-                
-                log.DebugFormat("No episode match for series: {0}, seriesId: {1}, episodeName: {2}", seriesName, seriesId, episodeName);
-            }
-            #endregion
-
-            // still can't match.. return nothing
-            return string.Empty;
-        }
-
-        private string comp1_DirectMatch(string episodeName, List<TvdbEpisode> el)
-        {
-            return comp1_DirectMatch(episodeName, el, tailOrShort.Regular);
-        }
-
-        private string comp1_DirectMatch(string episodeName, List<TvdbEpisode> el, tailOrShort limiter)
-        {
-            #region Allow for short/tail match in episode name
-            if (!limiter.Equals(tailOrShort.Regular))
-            {
-                if (episodeName.Length >= cnstIntRange)
-                {
-                    if (limiter.Equals(tailOrShort.Short))
-                    {
-                        episodeName = episodeName.Substring(0, cnstIntRange);
-                        log.DebugFormat("Compare function (4) - Short Match Test (First {0} Charcters of Episode Name)", cnstIntRange);
-                    }
-                    else
-                    {
-                        log.DebugFormat("Ineligible for Compare function (4): Episode name is shorter than {0} charachters.", cnstIntRange);
-                        return string.Empty;
-                    }
-                }
-                else if (limiter.Equals(tailOrShort.Tail))
-                {
-                    episodeName = episodeName.Substring(episodeName.Length + cnstIntRange);
-                    log.DebugFormat("Compare function (6) - Tail Match Test (Last {0} charcters of Episode Name)", cnstIntRange);
-                }
-                else
-                {
-                    log.DebugFormat("Ineligible for Compare function (6): Episode name is shorter than {0} charachters", cnstIntRange);
-                    return string.Empty;
-                }
-            }
-            #endregion
-
-            foreach (TvdbEpisode e in el)
-            {
-                String tvdbEpisodeName = e.EpisodeName;
-                #region Allow for short/tail mtch in database episode name
-                if (!limiter.Equals(tailOrShort.Regular))
-                {
-                    if (tvdbEpisodeName.Length >= cnstIntRange)
-                    {
-                        if (limiter.Equals(tailOrShort.Short))
-                        {
-                            tvdbEpisodeName = tvdbEpisodeName.Substring(0, cnstIntRange);
-                            log.DebugFormat("Compare function (4) - Short Match Test (First {0} Charcters of Episode Name)", cnstIntRange);
-                        }
-                        else if (limiter.Equals(tailOrShort.Tail))
-                        {
-                            tvdbEpisodeName = tvdbEpisodeName.Substring(episodeName.Length - cnstIntRange);
-                            log.DebugFormat("Compare function (6) - Tail Match Test (Last {0} charcters of Episode Name)", cnstIntRange);
-                        }
-                    }
-                    else if (limiter.Equals(tailOrShort.Short) || limiter.Equals(tailOrShort.Tail)) continue;
-                }
-                #endregion
-
-                if (episodeName.Equals(tvdbEpisodeName) || episodeName.ToLower().Equals(tvdbEpisodeName.ToLower()))
-                {
-                    int sn = e.SeasonNumber;
-                    int ep = e.EpisodeNumber;
-                    string ret = FormatSeasonAndEpisode(sn, ep);
-
-                    if (limiter.Equals(tailOrShort.Regular)) GuideEnricherService.matchingSuccess(0);
-                    else if (limiter.Equals(tailOrShort.Short)) GuideEnricherService.matchingSuccess(3);
-                    else GuideEnricherService.matchingSuccess(5);
-
-                    log.DebugFormat("Compare function success (Listing <==> Database): {0} <==> {1}, NOT ALTERED", episodeName, e.EpisodeName);
-                    return ret;
-                }
-            }
-            return string.Empty;
-        }
-
-        private string comp2_RemovePunctuation(string episodeName, List<TvdbEpisode> el)
-        {
-            return comp2_RemovePunctuation(episodeName, el, tailOrShort.Regular);
-        }
-
-        private string comp2_RemovePunctuation(string episodeName, List<TvdbEpisode> el, tailOrShort limiter)
-        {
-            #region Allow for short/tail match in episode name
-            if (!limiter.Equals(tailOrShort.Regular))
-            {
-                if (episodeName.Length >= cnstIntRange)
-                {
-                    if (limiter.Equals(tailOrShort.Short))
-                    {
-                        episodeName = episodeName.Substring(0, cnstIntRange);
-                        log.DebugFormat("Compare function (5) - Short Match Test (First {0} Charcters of Episode Name)", cnstIntRange);
-                    }
-                    if (limiter.Equals(tailOrShort.Tail))
-                    {
-                        episodeName = episodeName.Substring(episodeName.Length - cnstIntRange);
-                        log.DebugFormat("Compare function (7) - Tail Match Test (Last {0} charcters of Episode Name)", cnstIntRange);
-                    }
-                }
-                else if (limiter.Equals(tailOrShort.Short))
-                {
-                    log.DebugFormat("Ineligible for Compare function (5): Episode name is shorter than {0} charachters.", cnstIntRange);
-                    return string.Empty;
-                }
-                else if (limiter.Equals(tailOrShort.Tail))
-                {
-                    log.DebugFormat("Ineligible for Compare function (7): Episode name is shorter than {0} charachters.", cnstIntRange);
-                    return string.Empty;
-                }
-            }
-            #endregion
-
-            foreach (TvdbEpisode e in el)
-            {
-                log.DebugFormat("({0})", el.IndexOf(e));
-
-                String tvdbEpisodeName = e.EpisodeName;
-                #region Allow for short/tail match in database episode name
-                if (!limiter.Equals(tailOrShort.Regular))
-                {
-                    if (tvdbEpisodeName.Length >= cnstIntRange)
-                    {
-                        if (limiter.Equals(tailOrShort.Short))
-                        {
-                            tvdbEpisodeName = tvdbEpisodeName.Substring(0, cnstIntRange);
-                        }
-                        if (limiter.Equals(tailOrShort.Tail))
-                        {
-                            tvdbEpisodeName = tvdbEpisodeName.Substring(episodeName.Length - cnstIntRange);
-                        }
-                    }
-                    else if (limiter.Equals(tailOrShort.Short) || limiter.Equals(tailOrShort.Tail)) continue;
-                }
-                #endregion
-
-                // remove all punctuation
-                string e1 = removePunctuation(episodeName);
-                string e2 = removePunctuation(tvdbEpisodeName);
-
-                if (e1.Equals(e2) || e1.ToLower().Equals(e2.ToLower()))
-                {
-                    int sn = e.SeasonNumber;
-                    int ep = e.EpisodeNumber;
-                    string ret = FormatSeasonAndEpisode(sn, ep);
-                    
-                    if (limiter.Equals(tailOrShort.Regular)) GuideEnricherService.matchingSuccess(1);
-                    else if (limiter.Equals(tailOrShort.Short)) GuideEnricherService.matchingSuccess(4);
-                    else GuideEnricherService.matchingSuccess(6);
-
-                    log.DebugFormat("Compare function success (Listing <==> Database): {0} <==> {1}, Altered String Match {2} <==> {3}", episodeName, e.EpisodeName, e1, e2);
-                    return ret;
-                }
+                return false;
             }
 
-            return string.Empty;
-        }       
-
-        private string compX_RegExStripper(string episodeName, List<TvdbEpisode> el)
-        {
-            foreach (TvdbEpisode e in el)
-            {
-                log.DebugFormat("({0})", el.IndexOf(e));
-
-                String desperateEpisode1 = episodeName.ToLower();
-                String desperateEpisode2 = e.EpisodeName.ToLower();
-
-                //cleanup episode from listing
-                desperateEpisode1 = Regex.Replace(desperateEpisode1, @"1|2|3|4|5|6|7|8|9|0|\(|\)|&|part|in|,|is|and|the|I|X|V|-|%|percent| ", string.Empty, RegexOptions.IgnoreCase);
-                desperateEpisode2 = Regex.Replace(desperateEpisode2, @"1|2|3|4|5|6|7|8|9|0|\(|\)|&|part|in|,|is|and|the|I|X|V|-|%|percent| ", string.Empty, RegexOptions.IgnoreCase);
-                if (desperateEpisode1.Equals(desperateEpisode2))
-                {
-                    int sn = e.SeasonNumber;
-                    int ep = e.EpisodeNumber;
-                    string ret = FormatSeasonAndEpisode(sn, ep);
-                    GuideEnricherService.matchingSuccess(2);
-                    log.DebugFormat("Compare function (3) Success (Listing <==> Database): {0}  <==> {1}, Altered string Match {2} <==> {3}", episodeName, e.EpisodeName, desperateEpisode1, desperateEpisode2);
-                    return ret;
-                }
-            } 
-
-            return null;
-        }
-
-        private static string FormatSeasonAndEpisode(int season, int episode)
-        {
-            return string.Format("S{0:00}E{1:00}", season, episode);
-        }
-
-        private string removePunctuation(string inString)
-        {
-            StringBuilder sb = new StringBuilder();
-            for(int i = 0; i < inString.Length; i++)
-            {
-
-                if(Char.IsLetterOrDigit(inString[i]))
-                {
-                    sb = sb.Append(inString[i]);
-                }
-            }
-
-            return sb.ToString();
+            return this.seriesNameMapping.ContainsKey(seriesName);
         }
     }
 }
