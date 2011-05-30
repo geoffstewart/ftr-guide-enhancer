@@ -103,7 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config.cs" />
-    <Compile Include="EnrichedGuideProgram.cs" />
+    <Compile Include="GuideEnricherProgram.cs" />
     <Compile Include="EpisodeMatchMethodLoader.cs" />
     <Compile Include="EpisodeMatchMethods\AbsoluteEpisodeNumberMatchMethod.cs" />
     <Compile Include="EpisodeMatchMethods\MatchMethodBase.cs" />

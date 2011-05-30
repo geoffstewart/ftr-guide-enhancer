@@ -17,7 +17,7 @@ namespace GuideEnricher.EpisodeMatchMethods
             get { return "No Punctuation"; }
         }
 
-        public override bool Match(EnrichedGuideProgram guideProgram, List<TvdbEpisode> episodes)
+        public override bool Match(GuideEnricherProgram guideProgram, List<TvdbEpisode> episodes)
         {
             if (string.IsNullOrEmpty(guideProgram.SubTitle))
             {

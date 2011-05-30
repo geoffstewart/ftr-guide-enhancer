@@ -5,7 +5,7 @@ namespace GuideEnricher.Tests
     /// <summary>
     /// Used for unit testing, allows to set the expected result for episode number
     /// </summary>
-    public class TestProgram : EnrichedGuideProgram
+    public class TestProgram : GuideEnricherProgram
     {
         public TestProgram(string title, string subTitle, int absoluteEpisodeNumber, string expectedEpisodeNumberDisplay)
         {

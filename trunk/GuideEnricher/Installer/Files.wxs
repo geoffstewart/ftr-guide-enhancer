@@ -51,7 +51,7 @@
                </Component>
               <Component Id="log4net" Guid="1E687561-415B-4A91-82C9-D4BC9D440278" KeyPath="yes">
                 <File Id="log4netdll" Name="log4net.dll" Source="..\GuideEnricher\bin\Release\log4net.dll"/>
-                <File Id="log4netlicense" Name="license.txt" Source="..\GuideEnricher\References\log4net\license.txt"/>
+                <File Id="log4netlicense" Name="log4net_license.txt" Source="..\GuideEnricher\References\log4net\license.txt"/>
               </Component>
 
             </Directory>

@@ -47,7 +47,7 @@
             {
                 try
                 {
-                    this.enricher.EnrichProgram(testProgram);
+                    this.enricher.EnrichProgram(testProgram, false);
                     if (testProgram.EpisodeNumberDisplay == testProgram.ExpectedEpisodeNumberDisplay)
                     {
                         Console.WriteLine(string.Format("Correctly matched {0} - {1}", testProgram.Title, testProgram.EpisodeNumberDisplay));   
