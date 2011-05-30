@@ -60,26 +60,13 @@ namespace GuideEnricher.tvdb
             this.IntializeRegexMappings();
         }
 
-        public void EnrichProgram(EnrichedGuideProgram existingProgram)
+        public void EnrichProgram(GuideEnricherProgram existingProgram, bool forceRefresh)
         {
             log.DebugFormat("Starting lookup for {0} - {1}", existingProgram.Title, existingProgram.SubTitle);
             var seriesId = this.getSeriesId(existingProgram.Title);
 
             TvdbSeries tvdbSeries = null;
-            bool callSuccessful = false;
-            int attemptNumber = 0;
-            while (attemptNumber++ < 3 && !callSuccessful)
-            {
-                try
-                {
-                    tvdbSeries = tvdbHandler.GetSeries(seriesId, language, true, false, false);
-                    callSuccessful = true;
-                }
-                catch (TvdbException tvdbException)
-                {
-                    log.Debug("TVDB Error getting series", tvdbException);
-                }
-            }
+            tvdbSeries = GetTvdbSeries(seriesId, tvdbSeries, forceRefresh);
 
             if (tvdbSeries == null)
             {
@@ -102,6 +89,31 @@ namespace GuideEnricher.tvdb
             }
         }
 
+        private TvdbSeries GetTvdbSeries(int seriesId, TvdbSeries tvdbSeries, bool forceRefresh)
+        {
+            bool callSuccessful = false;
+            int attemptNumber = 0;
+            while (attemptNumber++ < 3 && !callSuccessful)
+            {
+                try
+                {
+                    tvdbSeries = this.tvdbHandler.GetSeries(seriesId, this.language, true, false, false);
+                    if (forceRefresh)
+                    {
+                        tvdbSeries = this.tvdbHandler.ForceReload(tvdbSeries, true, false, false);
+                    }
+
+                    callSuccessful = true;
+                }
+                catch (TvdbException tvdbException)
+                {
+                    this.log.Debug("TVDB Error getting series", tvdbException);
+                }
+            }
+
+            return tvdbSeries;
+        }
+
         private void DumpSeriesEpisodes(TvdbSeries series, List<TvdbEpisode> episodes)
         {
             this.log.InfoFormat("Dumping episode info for {0}", series.SeriesName);
@@ -113,7 +125,7 @@ namespace GuideEnricher.tvdb
 
         public void Dispose()
         {
-            this.closeCache();
+            this.tvdbHandler.CloseCache();
         }
 
         private void IntializeRegexMappings()
@@ -146,11 +158,6 @@ namespace GuideEnricher.tvdb
             TvdbLanguage lang = availableLanguages.Find(x => x.Abbriviation == selectedLanguage);
             this.log.DebugFormat("Language: {0}", lang.Abbriviation);
             return lang;
-        }
-
-        public void closeCache()
-        {
-            tvdbHandler.CloseCache();
         }
 
         public int getSeriesId(string seriesName)

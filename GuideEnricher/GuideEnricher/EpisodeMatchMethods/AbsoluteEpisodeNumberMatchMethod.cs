@@ -16,7 +16,7 @@ namespace GuideEnricher.EpisodeMatchMethods
             get { return "Absolute Episode Number"; }
         }
 
-        public override bool Match(EnrichedGuideProgram guideProgram, List<TvdbEpisode> episodes)
+        public override bool Match(GuideEnricherProgram guideProgram, List<TvdbEpisode> episodes)
         {
             int episodeNumber;
             if (!guideProgram.EpisodeNumber.HasValue)

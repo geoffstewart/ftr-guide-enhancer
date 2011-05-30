@@ -86,7 +86,10 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="TvdbLib, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="TvdbLib, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GuideEnricher\References\TvdbLib.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MatchMethodTests.cs" />

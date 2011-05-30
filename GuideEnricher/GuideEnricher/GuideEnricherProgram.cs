@@ -4,15 +4,15 @@ namespace GuideEnricher
     using System.Text.RegularExpressions;
     using ForTheRecord.Entities;
 
-    public class EnrichedGuideProgram : GuideProgram
+    public class GuideEnricherProgram : GuideProgram
     {
         protected GuideProgram guideProgram;
 
-        protected EnrichedGuideProgram()
+        protected GuideEnricherProgram()
         {
         }
 
-        public EnrichedGuideProgram(GuideProgram guideProgram)
+        public GuideEnricherProgram(GuideProgram guideProgram)
         {
             this.guideProgram = guideProgram;
             this.Matched = this.EpisodeIsEnriched();

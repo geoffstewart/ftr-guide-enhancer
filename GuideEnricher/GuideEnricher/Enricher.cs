@@ -14,7 +14,7 @@
     public class Enricher
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly List<EnrichedGuideProgram> enrichedPrograms;
+        private readonly List<GuideEnricherProgram> enrichedPrograms;
         private readonly ITvSchedulerService tvSchedulerService;
         private readonly ITvGuideService tvGuideService;
         private readonly IConfiguration config;
@@ -30,7 +30,7 @@
         public Enricher(IConfiguration configuration, ILogService ftrLogService, ITvGuideService tvGuideService, ITvSchedulerService tvSchedulerService)
         {
             this.config = configuration;
-            this.enrichedPrograms = new List<EnrichedGuideProgram>();
+            this.enrichedPrograms = new List<GuideEnricherProgram>();
             this.uniqueProgramsOnly = new List<Guid>();
             this.ftrlogAgent = ftrLogService;
             this.tvGuideService = tvGuideService;
@@ -47,22 +47,26 @@
             // lists to keep track of failed searches for series and episodes
             // use these to prevent repeated searches that you know will fail
 
-            this.noSeriesMatchList = new ArrayList();
             this.noEpisodeMatchList = new ArrayList();
 
             using (tvdbLibAccess = new TvdbLibAccess(this.config, this.matchMethods))
             {
                 foreach (var scheduleSummary in this.tvSchedulerService.GetAllSchedules(ChannelType.Television, ScheduleType.Recording, true))
                 {
-                    log.DebugFormat("Enriching {0}", scheduleSummary.Name);
-                    var schedule = this.tvSchedulerService.GetScheduleById(scheduleSummary.ScheduleId);
-                    foreach (var upcomingProgram in this.tvSchedulerService.GetUpcomingPrograms(schedule, true))
+                    try
                     {
-                        var guideProgram = new EnrichedGuideProgram(this.tvGuideService.GetProgramById((Guid)upcomingProgram.GuideProgramId));
-                        if (!guideProgram.Matched)
+                        log.DebugFormat("Enriching {0}", scheduleSummary.Name);
+                        var schedule = this.tvSchedulerService.GetScheduleById(scheduleSummary.ScheduleId);
+                        var noUmatchedEpisodes = this.EnrichProgramsInSchedule(schedule, false);
+                        if (!noUmatchedEpisodes)
                         {
-                            this.EnrichSubroutine(guideProgram);
+                            // Force a refresh on the series and try again...
+                            this.EnrichProgramsInSchedule(schedule, true);
                         }
+                    }
+                    catch (NoSeriesMatchException noSeriesMatchException)
+                    {
+                        this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Error, string.Format("Cannot find the correct series for schedule '{0}', consider editing the application config with the correct id using \"id=xxxxx\"", scheduleSummary.Name));
                     }
                 }
 
@@ -83,7 +87,30 @@
             }
         }
 
-        public void EnrichSubroutine(EnrichedGuideProgram guideProgram)
+        private bool EnrichProgramsInSchedule(Schedule schedule, bool forceRefresh)
+        {
+            bool noUnmatchedEpisodes = true;
+
+            foreach (var upcomingProgram in this.tvSchedulerService.GetUpcomingPrograms(schedule, true))
+            {
+                var guideProgram = new GuideEnricherProgram(this.tvGuideService.GetProgramById((Guid)upcomingProgram.GuideProgramId));
+                if (!guideProgram.Matched)
+                {
+                    this.EnrichSingleProgram(guideProgram, forceRefresh);
+
+                    // Force a refresh only once
+                    forceRefresh = false;
+                }
+                else
+                {
+                    noUnmatchedEpisodes = false;
+                }
+            }
+
+            return noUnmatchedEpisodes;
+        }
+
+        public void EnrichSingleProgram(GuideEnricherProgram guideProgram, bool forceRefresh)
         {
             if (this.uniqueProgramsOnly.Contains(guideProgram.GuideProgramId))
             {
@@ -94,18 +121,12 @@
             
             try
             {
-                if (noSeriesMatchList.Contains(guideProgram.Title) || noEpisodeMatchList.Contains(guideProgram.Title + "-" + guideProgram.SubTitle))
+                if (noEpisodeMatchList.Contains(guideProgram.Title + "-" + guideProgram.SubTitle))
                 {
                     return;
                 }
 
-                this.tvdbLibAccess.EnrichProgram(guideProgram);
-            }
-            catch (NoSeriesMatchException noSeriesMatchException)
-            {
-                this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Error, string.Format("Cannot find the correct series for {0}, consider editing the application config with the correct id using \"id=xxxxx\"", guideProgram.Title));
-                this.noSeriesMatchList.Add(guideProgram.Title);
-                return;
+                this.tvdbLibAccess.EnrichProgram(guideProgram, forceRefresh);
             }
             catch (NoEpisodeMatchException)
             {
