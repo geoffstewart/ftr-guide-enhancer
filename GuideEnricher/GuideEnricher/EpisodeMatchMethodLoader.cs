@@ -2,8 +2,8 @@ namespace GuideEnricher
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection;
+    using System.Configuration;
+    using GuideEnricher.Config;
     using GuideEnricher.EpisodeMatchMethods;
 
     public class EpisodeMatchMethodLoader
@@ -13,12 +13,15 @@ namespace GuideEnricher
         /// </summary>
         public static List<IEpisodeMatchMethod> GetMatchMethods()
         {
-            var methods = Assembly.GetExecutingAssembly().GetTypes().Where(type => typeof(IEpisodeMatchMethod).IsAssignableFrom(type) && type.IsClass && !type.IsAbstract).ToList();
-            methods.Sort(new MatchMethodPriorityComparer());
-            
-            var matchMethods = new List<IEpisodeMatchMethod>(methods.Count);
-            matchMethods.AddRange(methods.Select(method => Activator.CreateInstance(method) as IEpisodeMatchMethod));
+            var matchMethodsSection = ConfigurationManager.GetSection("MatchMethodsSection") as MatchMethodsSection;
+            var matchMethods = new List<IEpisodeMatchMethod>(matchMethodsSection.MatchMethods.Count);
 
+            for (int i = 0; i < matchMethodsSection.MatchMethods.Count; i++)
+            {
+                var type = Type.GetType(matchMethodsSection.MatchMethods[i].MethodName);
+                matchMethods.Add(Activator.CreateInstance(type) as IEpisodeMatchMethod);
+            }
+            
             return matchMethods;
         }
     }

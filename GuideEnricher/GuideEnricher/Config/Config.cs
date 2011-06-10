@@ -1,4 +1,4 @@
-﻿namespace GuideEnricher
+﻿namespace GuideEnricher.Config
 {
     using System.Collections.Generic;
     using System.Configuration;

@@ -6,6 +6,7 @@
     using System.Reflection;
     using ForTheRecord.Entities;
     using ForTheRecord.ServiceContracts;
+    using GuideEnricher.Config;
     using GuideEnricher.EpisodeMatchMethods;
     using GuideEnricher.Exceptions;
     using GuideEnricher.tvdb;
@@ -64,7 +65,7 @@
                             this.EnrichProgramsInSchedule(schedule, true);
                         }
                     }
-                    catch (NoSeriesMatchException noSeriesMatchException)
+                    catch (NoSeriesMatchException)
                     {
                         this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Error, string.Format("Cannot find the correct series for schedule '{0}', consider editing the application config with the correct id using \"id=xxxxx\"", scheduleSummary.Name));
                     }
@@ -159,7 +160,7 @@
                 guidesToUpdate = new List<GuideProgram>();
                 this.enrichedPrograms.GetRange(position, windowSize).ForEach(x => guidesToUpdate.Add(x.GuideProgram));
                 this.UpdateForTheRecordPrograms(guidesToUpdate.ToArray());
-                position += 10;
+                position += windowSize;
             }
 
             log.DebugFormat("Importing shows {0} to {1}", position + 1, this.enrichedPrograms.Count);

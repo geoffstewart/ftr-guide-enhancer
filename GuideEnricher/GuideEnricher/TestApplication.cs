@@ -16,7 +16,7 @@ namespace GuideEnricher
 
             Thread.Sleep(2000);
 
-            var config = Config.GetInstance();
+            var config = Config.Config.GetInstance();
             ServerSettings serverSettings = new ServerSettings();
             serverSettings.ServerName = "ganymed";
             serverSettings.Transport = ServiceTransport.NetTcp;
