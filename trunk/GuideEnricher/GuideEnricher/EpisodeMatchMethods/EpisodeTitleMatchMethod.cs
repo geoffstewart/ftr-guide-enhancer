@@ -5,7 +5,6 @@ namespace GuideEnricher.EpisodeMatchMethods
     using log4net;
     using TvdbLib.Data;
 
-    [MatchMethodPriority(Priority = 1)]
     public class EpisodeTitleMatchMethod : MatchMethodBase
     {
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

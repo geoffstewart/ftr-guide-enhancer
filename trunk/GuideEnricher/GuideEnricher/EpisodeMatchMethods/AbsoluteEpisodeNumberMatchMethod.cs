@@ -6,7 +6,6 @@ namespace GuideEnricher.EpisodeMatchMethods
     using TvdbLib.Data;
     using System.Linq;
 
-    [MatchMethodPriority(Priority = 2)]
     public class AbsoluteEpisodeNumberMatchMethod : MatchMethodBase
     {
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -18,6 +17,9 @@ namespace GuideEnricher.EpisodeMatchMethods
 
         public override bool Match(GuideEnricherProgram guideProgram, List<TvdbEpisode> episodes)
         {
+            // Disabled for now
+            return false;
+
             int episodeNumber;
             if (!guideProgram.EpisodeNumber.HasValue)
             {

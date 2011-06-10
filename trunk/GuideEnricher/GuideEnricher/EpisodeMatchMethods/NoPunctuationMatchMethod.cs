@@ -6,7 +6,6 @@ namespace GuideEnricher.EpisodeMatchMethods
     using log4net;
     using TvdbLib.Data;
 
-    [MatchMethodPriority(Priority = 3)]
     public class NoPunctuationMatchMethod : MatchMethodBase
     {
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

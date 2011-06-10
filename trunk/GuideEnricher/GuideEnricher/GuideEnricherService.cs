@@ -10,14 +10,13 @@
 namespace GuideEnricher
 {
     using System;
-    using System.Collections.Generic;
     using System.Reflection;
     using System.ServiceModel;
     using System.ServiceProcess;
     using System.Threading;
     using ForTheRecord.Entities;
     using ForTheRecord.ServiceAgents;
-    using GuideEnricher.EpisodeMatchMethods;
+    using GuideEnricher.Config;
     using log4net;
 
     /**
@@ -60,66 +59,33 @@ namespace GuideEnricher
         {
             try
             {
-                var serverSettings = new ServerSettings();
-                serverSettings.ServerName = config.getProperty("ftrUrlHost");
-                serverSettings.Transport = ServiceTransport.NetTcp;
-                serverSettings.Port = Convert.ToInt32(config.getProperty("ftrUrlPort"));
-                string pass = config.getProperty("ftrUrlPassword");
-
-                if (pass != null && pass.Length > 0)
-                {
-                    serverSettings.Password = pass;
-                }
-
-                log.DebugFormat("Just about to call ServiceChannelFactories.Initialize()");
-
-                if (!ServiceChannelFactories.Initialize(serverSettings, false))
-                {
-                    log.Fatal("Unable to connect to ForTheRecordService, check your settings.");
-                    throw new Exception("Unable to connect to ForTheRecordService, check your settings.");
-                }
-
-                // We need to connect to FTR before getting log agent especially when it's not on localhost
-                ftrlogAgent = new LogServiceAgent();
-                ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "GuideEnricher successfully connected");
-                log.Info("Connected to ForTheRecordService");
-
-                ServiceHost sh = ForTheRecordListener.CreateServiceHost(config.getProperty("serviceUrl"));
-
-                try
-                {
-                    sh.Open();
-
-                }
-                catch (System.ServiceProcess.TimeoutException ex)
-                {
-                    log.Fatal("Timeout on creating the ServiceHost", ex);
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    log.Fatal("Error on creating ServiceHost", ex);
-                    throw;
-                }
-
-                using (var agent = new ForTheRecordServiceAgent())
-                {
-                    ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents | ForTheRecordEventGroup.GuideEvents;
-                    agent.EnsureEventListener(eventGroupsToListenTo, this.config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
-                }
-
-                log.Debug("Starting GuideEnricher...");
-
-                // start worker threads
-                worker.Start();
-                sleeper.Start();
-
-                // Call the enrich once when we first start
-                this.CallEnrich();
+                this.CreateWebService();
+                var connector = new Thread(SetupFTRConnection);
+                connector.Start();
             }
             catch (Exception ex)
             {
                 log.Fatal("Error on starting service", ex);
+                throw;
+            }
+        }
+
+        private void CreateWebService()
+        {
+            ServiceHost serviceHost = ForTheRecordListener.CreateServiceHost(this.config.getProperty("serviceUrl"));
+
+            try
+            {
+                serviceHost.Open();
+            }
+            catch (System.ServiceProcess.TimeoutException ex)
+            {
+                log.Fatal("Timeout on creating the ServiceHost", ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                log.Fatal("Error on creating ServiceHost", ex);
                 throw;
             }
         }
@@ -142,6 +108,52 @@ namespace GuideEnricher
          * Loop that will find all upcoming recordings, enrich data, update in database
          * if the episode information changed
          */
+
+        public void SetupFTRConnection()
+        {
+            var serverSettings = new ServerSettings();
+            serverSettings.ServerName = config.getProperty("ftrUrlHost");
+            serverSettings.Transport = ServiceTransport.NetTcp;
+            serverSettings.Port = Convert.ToInt32(config.getProperty("ftrUrlPort"));
+            var password = config.getProperty("ftrUrlPassword");
+
+            if(!string.IsNullOrEmpty(password))
+            {
+                serverSettings.Password = password;
+            }
+
+            bool connected = false;
+
+            while (!connected)
+            {
+                connected = ServiceChannelFactories.Initialize(serverSettings, false);
+                if(!connected)
+                {
+                    log.Fatal("Unable to connect to ForTheRecordService, check your settings.  Sleeping for 1 minute");
+                    Thread.Sleep(60000);
+                }
+            }
+            
+            // We need to connect to FTR before getting log agent especially when it's not on localhost
+            ftrlogAgent = new LogServiceAgent();
+            ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "GuideEnricher successfully connected");
+            log.Info("Connected to ForTheRecordService");
+
+            using(var agent = new ForTheRecordServiceAgent())
+            {
+                ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents | ForTheRecordEventGroup.GuideEvents;
+                agent.EnsureEventListener(eventGroupsToListenTo, this.config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
+            }
+
+            log.Debug("Starting GuideEnricher...");
+
+            // start worker threads
+            worker.Start();
+            sleeper.Start();
+
+            // Call the enrich once when we first start
+            this.CallEnrich();            
+        }
 
         public void EnrichGuideDataJob()
         {

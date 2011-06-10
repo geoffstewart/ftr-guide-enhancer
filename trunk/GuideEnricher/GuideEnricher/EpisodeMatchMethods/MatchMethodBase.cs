@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Reflection;
-    using GuideEnricher.tvdb;
+    using GuideEnricher.Config;
     using log4net;
     using TvdbLib.Data;
 
@@ -24,6 +24,10 @@
         {
             this.SuccessfulMatches++;
             guideProgram.EpisodeNumberDisplay = Enricher.FormatSeasonAndEpisode(episode.SeasonNumber, episode.EpisodeNumber);
+            if (bool.Parse(Config.GetInstance().getProperty("updateAll")))
+            {
+                guideProgram.SubTitle = episode.EpisodeName;
+            }
 
             log.DebugFormat("[{0}] Correctly matched {1} - {2} as {3}", this.MethodName, guideProgram.Title, guideProgram.SubTitle, guideProgram.EpisodeNumberDisplay);
             return true;

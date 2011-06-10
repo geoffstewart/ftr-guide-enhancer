@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using GuideEnricher.Config;
     using GuideEnricher.tvdb;
     using log4net.Config;
     using Moq;

@@ -12,6 +12,7 @@ namespace GuideEnricher.tvdb
     using System.Collections.Generic;
     using System.Reflection;
     using System.Text.RegularExpressions;
+    using GuideEnricher.Config;
     using GuideEnricher.EpisodeMatchMethods;
     using GuideEnricher.Exceptions;
     using log4net;
