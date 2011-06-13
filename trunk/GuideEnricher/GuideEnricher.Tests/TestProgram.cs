@@ -1,6 +1,7 @@
 namespace GuideEnricher.Tests
 {
     using ForTheRecord.Entities;
+    using GuideEnricher.Model;
 
     /// <summary>
     /// Used for unit testing, allows to set the expected result for episode number

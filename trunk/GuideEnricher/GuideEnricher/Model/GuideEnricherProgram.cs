@@ -1,4 +1,4 @@
-namespace GuideEnricher
+namespace GuideEnricher.Model
 {
     using System;
     using System.Text.RegularExpressions;

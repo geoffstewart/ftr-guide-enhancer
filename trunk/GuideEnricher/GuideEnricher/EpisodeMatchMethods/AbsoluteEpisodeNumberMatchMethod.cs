@@ -2,6 +2,7 @@ namespace GuideEnricher.EpisodeMatchMethods
 {
     using System.Collections.Generic;
     using System.Reflection;
+    using GuideEnricher.Model;
     using log4net;
     using TvdbLib.Data;
     using System.Linq;
@@ -17,19 +18,16 @@ namespace GuideEnricher.EpisodeMatchMethods
 
         public override bool Match(GuideEnricherProgram guideProgram, List<TvdbEpisode> episodes)
         {
-            // Disabled for now
-            return false;
-
             int episodeNumber;
             if (!guideProgram.EpisodeNumber.HasValue)
             {
                 if (int.TryParse(guideProgram.SubTitle, out episodeNumber))
                 {
-                    log.DebugFormat("{0}-{1} subtitle is a number, will use it to try to match as absolute episode number", guideProgram.Title, guideProgram.SubTitle);
+                    this.log.DebugFormat("{0}-{1} subtitle is a number, will use it to try to match as absolute episode number", guideProgram.Title, guideProgram.SubTitle);
                 }
                 else
                 {
-                    log.DebugFormat("Cannot use match method [{0}] {1} does not have an episode number", this.MethodName, guideProgram.Title);
+                    this.log.DebugFormat("Cannot use match method [{0}] {1} does not have an episode number", this.MethodName, guideProgram.Title);
                     return false;
                 }
             }
@@ -69,7 +67,7 @@ namespace GuideEnricher.EpisodeMatchMethods
                     episode.AbsoluteNumber = absoluteNumber;
                 }
 
-                log.DebugFormat("{0}-{1} is absolute number {2}", episode.SeasonNumber, episode.EpisodeNumber, episode.AbsoluteNumber);
+                this.log.DebugFormat("{0}-{1} is absolute number {2}", episode.SeasonNumber, episode.EpisodeNumber, episode.AbsoluteNumber);
             }
         }
     }
