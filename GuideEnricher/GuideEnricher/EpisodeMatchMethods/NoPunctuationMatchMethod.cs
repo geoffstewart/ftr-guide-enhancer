@@ -3,6 +3,7 @@ namespace GuideEnricher.EpisodeMatchMethods
     using System.Collections.Generic;
     using System.Reflection;
     using System.Text.RegularExpressions;
+    using GuideEnricher.Model;
     using log4net;
     using TvdbLib.Data;
 
@@ -20,7 +21,7 @@ namespace GuideEnricher.EpisodeMatchMethods
         {
             if (string.IsNullOrEmpty(guideProgram.SubTitle))
             {
-                log.DebugFormat("Cannot use match method [{0}] {1} does not have a subtitle", this.MethodName, guideProgram.Title);
+                this.log.DebugFormat("Cannot use match method [{0}] {1} does not have a subtitle", this.MethodName, guideProgram.Title);
                 return false;
             }
 

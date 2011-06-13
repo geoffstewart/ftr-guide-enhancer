@@ -15,6 +15,7 @@ namespace GuideEnricher.tvdb
     using GuideEnricher.Config;
     using GuideEnricher.EpisodeMatchMethods;
     using GuideEnricher.Exceptions;
+    using GuideEnricher.Model;
     using log4net;
     using TvdbLib;
     using TvdbLib.Cache;

@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using System.Reflection;
     using GuideEnricher.Config;
+    using GuideEnricher.Model;
     using log4net;
     using TvdbLib.Data;
 
@@ -29,13 +30,13 @@
                 guideProgram.SubTitle = episode.EpisodeName;
             }
 
-            log.DebugFormat("[{0}] Correctly matched {1} - {2} as {3}", this.MethodName, guideProgram.Title, guideProgram.SubTitle, guideProgram.EpisodeNumberDisplay);
+            this.log.DebugFormat("[{0}] Correctly matched {1} - {2} as {3}", this.MethodName, guideProgram.Title, guideProgram.SubTitle, guideProgram.EpisodeNumberDisplay);
             return true;
         }
 
         protected bool Unmatched(GuideEnricherProgram guideProgram)
         {
-            log.DebugFormat("[{0}] Could not match {1} - {2}", this.MethodName, guideProgram.Title, guideProgram.SubTitle);
+            this.log.DebugFormat("[{0}] Could not match {1} - {2}", this.MethodName, guideProgram.Title, guideProgram.SubTitle);
             return false;
         }
     }

@@ -190,7 +190,8 @@ namespace GuideEnricher
                 using (var tvSchedulerServiceAgent = new TvSchedulerServiceAgent() )
                 {
                     var enricher = new Enricher(this.config, this.ftrlogAgent, tvGuideServiceAgent, tvSchedulerServiceAgent);
-                    enricher.EnrichUpcomingPrograms();
+                    enricher.EnrichUpcomingPrograms(ScheduleType.Suggestion);
+                    enricher.EnrichUpcomingPrograms(ScheduleType.Recording);
                 }
             }
         }

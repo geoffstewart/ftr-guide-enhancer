@@ -106,7 +106,7 @@
     <Compile Include="Config\MatchMethodElement.cs" />
     <Compile Include="Config\MatchMethodCollection.cs" />
     <Compile Include="Config\MatchMethodsSection.cs" />
-    <Compile Include="GuideEnricherProgram.cs" />
+    <Compile Include="Model\GuideEnricherProgram.cs" />
     <Compile Include="EpisodeMatchMethodLoader.cs" />
     <Compile Include="EpisodeMatchMethods\AbsoluteEpisodeNumberMatchMethod.cs" />
     <Compile Include="EpisodeMatchMethods\MatchMethodBase.cs" />
@@ -129,8 +129,6 @@
     <Compile Include="Config\SeriesNameMap.cs" />
     <Compile Include="Config\SeriesNameMapCollection.cs" />
     <Compile Include="Config\SeriesNameMapsSection.cs" />
-    <Compile Include="StringExtensionMethods.cs" />
-    <Compile Include="TestApplication.cs" />
     <Compile Include="test\TestForTheRecordListener.cs" />
     <Compile Include="exception\NoEpisodeMatchException.cs" />
     <Compile Include="exception\NoSeriesMatchException.cs" />

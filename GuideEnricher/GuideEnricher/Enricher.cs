@@ -9,6 +9,7 @@
     using GuideEnricher.Config;
     using GuideEnricher.EpisodeMatchMethods;
     using GuideEnricher.Exceptions;
+    using GuideEnricher.Model;
     using GuideEnricher.tvdb;
     using log4net;
 
@@ -23,7 +24,6 @@
         private readonly List<Guid> uniqueProgramsOnly;
         private readonly List<IEpisodeMatchMethod> matchMethods;
         private TvdbLibAccess tvdbLibAccess;
-        private ArrayList noSeriesMatchList;
         private ArrayList noEpisodeMatchList;
 
         private const string MODULE = "GuideEnricher";
@@ -39,30 +39,26 @@
             this.matchMethods = EpisodeMatchMethodLoader.GetMatchMethods();
         }
 
-        public void EnrichUpcomingPrograms()
+        public void EnrichUpcomingPrograms(ScheduleType scheduleType)
         {
-//            var upcomingRecordings = this.tvControlService.GetAllUpcomingRecordings(UpcomingRecordingsFilter.Recordings, false);
-//            this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "Starting process to enrich guide data.  Processing " + Convert.ToString(upcomingRecordings.Length) + " upcoming shows");
-//            log.InfoFormat("{0}: Starting the process to enrich guide data.  Processing {1} upcoming shows", MODULE, Convert.ToString(upcomingRecordings.Length));
-
-            // lists to keep track of failed searches for series and episodes
-            // use these to prevent repeated searches that you know will fail
-
             this.noEpisodeMatchList = new ArrayList();
 
-            using (tvdbLibAccess = new TvdbLibAccess(this.config, this.matchMethods))
+            using (this.tvdbLibAccess = new TvdbLibAccess(this.config, this.matchMethods))
             {
-                foreach (var scheduleSummary in this.tvSchedulerService.GetAllSchedules(ChannelType.Television, ScheduleType.Recording, true))
+                foreach (var scheduleSummary in this.tvSchedulerService.GetAllSchedules(ChannelType.Television, scheduleType, true))
                 {
                     try
                     {
-                        log.DebugFormat("Enriching {0}", scheduleSummary.Name);
-                        var schedule = this.tvSchedulerService.GetScheduleById(scheduleSummary.ScheduleId);
-                        var noUmatchedEpisodes = this.EnrichProgramsInSchedule(schedule, false);
-                        if (!noUmatchedEpisodes)
+                        if (scheduleSummary.IsActive)
                         {
-                            // Force a refresh on the series and try again...
-                            this.EnrichProgramsInSchedule(schedule, true);
+                            log.DebugFormat("Enriching {0}", scheduleSummary.Name);
+                            var schedule = this.tvSchedulerService.GetScheduleById(scheduleSummary.ScheduleId);
+                            var umatchedEpisodes = this.EnrichProgramsInSchedule(schedule, false);
+                            if (umatchedEpisodes)
+                            {
+                                // Force a refresh on the series and try again...
+                                this.EnrichProgramsInSchedule(schedule, true);
+                            }
                         }
                     }
                     catch (NoSeriesMatchException)
@@ -77,11 +73,11 @@
                 }
                 else
                 {
-                    ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "No programs were enriched");
+                    this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "No programs were enriched");
                     log.Debug("No programs were enriched");
                 }
 
-                foreach (var matchMethod in matchMethods)
+                foreach (var matchMethod in this.matchMethods)
                 {
                     log.DebugFormat("Match method {0} matched {1} out of {2} attempts", matchMethod.MethodName, matchMethod.SuccessfulMatches, matchMethod.MatchAttempts);
                 }
@@ -90,9 +86,19 @@
 
         private bool EnrichProgramsInSchedule(Schedule schedule, bool forceRefresh)
         {
-            bool noUnmatchedEpisodes = true;
+            bool unmatchedEpisodes = true;
 
-            foreach (var upcomingProgram in this.tvSchedulerService.GetUpcomingPrograms(schedule, true))
+            var upcomingPrograms = this.tvSchedulerService.GetUpcomingPrograms(schedule, true);
+
+            if (upcomingPrograms.Length == 0)
+            {
+                log.InfoFormat("Schedule '{0}' has no upcoming programs", schedule.Name);
+                
+                // return false to avoid unnecessary refresh
+                return false;
+            }
+
+            foreach (var upcomingProgram in upcomingPrograms)
             {
                 var guideProgram = new GuideEnricherProgram(this.tvGuideService.GetProgramById((Guid)upcomingProgram.GuideProgramId));
                 if (!guideProgram.Matched)
@@ -104,11 +110,11 @@
                 }
                 else
                 {
-                    noUnmatchedEpisodes = false;
+                    unmatchedEpisodes = false;
                 }
             }
 
-            return noUnmatchedEpisodes;
+            return unmatchedEpisodes;
         }
 
         public void EnrichSingleProgram(GuideEnricherProgram guideProgram, bool forceRefresh)
@@ -122,7 +128,7 @@
             
             try
             {
-                if (noEpisodeMatchList.Contains(guideProgram.Title + "-" + guideProgram.SubTitle))
+                if (this.noEpisodeMatchList.Contains(guideProgram.Title + "-" + guideProgram.SubTitle))
                 {
                     return;
                 }
@@ -158,7 +164,8 @@
             {
                 log.DebugFormat("Importing shows {0} to {1}", position + 1, position + windowSize + 1);
                 guidesToUpdate = new List<GuideProgram>();
-                this.enrichedPrograms.GetRange(position, windowSize).ForEach(x => guidesToUpdate.Add(x.GuideProgram));
+                List<GuideProgram> update = guidesToUpdate;
+                this.enrichedPrograms.GetRange(position, windowSize).ForEach(x => update.Add(x.GuideProgram));
                 this.UpdateForTheRecordPrograms(guidesToUpdate.ToArray());
                 position += windowSize;
             }

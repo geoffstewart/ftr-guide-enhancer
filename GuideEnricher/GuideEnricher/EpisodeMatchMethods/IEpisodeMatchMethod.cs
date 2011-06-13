@@ -1,6 +1,7 @@
 namespace GuideEnricher.EpisodeMatchMethods
 {
     using System.Collections.Generic;
+    using GuideEnricher.Model;
     using TvdbLib.Data;
 
     public interface IEpisodeMatchMethod
