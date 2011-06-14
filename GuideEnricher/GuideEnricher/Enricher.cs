@@ -101,10 +101,10 @@
             foreach (var upcomingProgram in upcomingPrograms)
             {
                 var guideProgram = new GuideEnricherProgram(this.tvGuideService.GetProgramById((Guid)upcomingProgram.GuideProgramId));
-                if (!guideProgram.Matched)
+                if (!guideProgram.Matched || bool.Parse(this.config.getProperty("updateSubtitles")))
                 {
                     this.EnrichSingleProgram(guideProgram, forceRefresh);
-
+                    
                     // Force a refresh only once
                     forceRefresh = false;
                 }

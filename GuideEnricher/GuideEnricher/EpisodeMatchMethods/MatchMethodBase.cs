@@ -25,7 +25,7 @@
         {
             this.SuccessfulMatches++;
             guideProgram.EpisodeNumberDisplay = Enricher.FormatSeasonAndEpisode(episode.SeasonNumber, episode.EpisodeNumber);
-            if (bool.Parse(Config.GetInstance().getProperty("updateAll")))
+            if (bool.Parse(Config.GetInstance().getProperty("updateSubtitles")))
             {
                 guideProgram.SubTitle = episode.EpisodeName;
             }
