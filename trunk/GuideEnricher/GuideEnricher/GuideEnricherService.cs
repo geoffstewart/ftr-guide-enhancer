@@ -46,7 +46,7 @@ namespace GuideEnricher
         {
             this.ServiceName = MyServiceName;
             worker = new Thread(this.EnrichGuideDataJob);
-            sleeper = new Thread(enrichTimer);
+            sleeper = new Thread(this.EnrichTimer);
         }
 
         // Added this to allow us to debug from Main method (no need to run the service to debug)
@@ -135,21 +135,22 @@ namespace GuideEnricher
             }
             
             // We need to connect to FTR before getting log agent especially when it's not on localhost
-            ftrlogAgent = new LogServiceAgent();
-            ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "GuideEnricher successfully connected");
+            this.ftrlogAgent = new LogServiceAgent();
+            this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "GuideEnricher successfully connected");
             log.Info("Connected to ForTheRecordService");
 
             using(var agent = new ForTheRecordServiceAgent())
             {
                 ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents | ForTheRecordEventGroup.GuideEvents;
                 agent.EnsureEventListener(eventGroupsToListenTo, this.config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
+                
             }
 
             log.Debug("Starting GuideEnricher...");
 
             // start worker threads
-            worker.Start();
-            sleeper.Start();
+            this.worker.Start();
+            this.sleeper.Start();
 
             // Call the enrich once when we first start
             this.CallEnrich();            
@@ -159,19 +160,19 @@ namespace GuideEnricher
         {
             try
             {
-                while (workerLoop)
+                while (this.workerLoop)
                 {
 
                     log.Debug("Thread waiting for events...");
 
                     // wait until the listener thread signals us to update the guide data
                     waitHandle.WaitOne();
-                    if (!workerLoop)
+                    if (!this.workerLoop)
                     {
                         break;
                     }
 
-                    CallEnrich();
+                    this.CallEnrich();
                     
                     log.InfoFormat("{0}: Done enriching guide data", MODULE);
                 }
@@ -196,7 +197,7 @@ namespace GuideEnricher
             }
         }
 
-        public void enrichTimer()
+        public void EnrichTimer()
         {
             string waittime = this.config.getProperty("sleepTimeInHours");
             if (waittime == null)
@@ -206,17 +207,17 @@ namespace GuideEnricher
             if ("0".Equals(waittime))
             {
                 // sleeper thread is disabled
-                ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "Sleeper thread is disabled");
+                this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "Sleeper thread is disabled");
                 return;
             }
             int waittimeHoursInt = Convert.ToInt32(waittime);
             int waittimeInt = waittimeHoursInt * 60 * 60 * 1000;
 
-            while (workerLoop)
+            while (this.workerLoop)
             {
-                ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "The Guide Enricher thread will pause for " + waittime + " hours");
+                this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "The Guide Enricher thread will pause for " + waittime + " hours");
                 Thread.Sleep(waittimeInt);
-                ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "Wait thread is awake and calling EnrichGuideDataJob...");
+                this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "Wait thread is awake and calling EnrichGuideDataJob...");
                 waitHandle.Set();
             }
         }
