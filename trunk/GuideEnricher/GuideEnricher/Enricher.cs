@@ -73,8 +73,9 @@
                 }
                 else
                 {
-                    this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "No programs were enriched");
-                    log.Debug("No programs were enriched");
+                    var message = string.Format("No {0} entries were enriched", scheduleType);
+                    this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, message);
+                    log.Debug(message);
                 }
 
                 foreach (var matchMethod in this.matchMethods)
