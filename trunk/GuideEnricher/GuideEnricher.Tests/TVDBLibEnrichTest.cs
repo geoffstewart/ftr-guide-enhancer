@@ -11,8 +11,8 @@
     [TestFixture]
     public class TVDBLibEnrichTest
     {
-        private TvdbLibAccess enricher;
         private List<TestProgram> testPrograms;
+        private Mock<IConfiguration> mockConfig;
 
         [TestFixtureSetUp]
         public void FixtureSetup()
@@ -23,9 +23,9 @@
         [SetUp]
         public void Setup()
         {
-            var mockConfig = new Mock<IConfiguration>();
-            this.enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
-            this.CreateTestData();
+            this.mockConfig = new Mock<IConfiguration>();
+            this.mockConfig.Setup(x => x.getProperty(It.IsAny<string>())).Returns(string.Empty);
+            this.mockConfig.Setup(x => x.getProperty("TvDbLibCache")).Returns(@"c:\tvdblibcache\");
         }
 
         private void CreateTestData()
@@ -43,12 +43,15 @@
         [Test]
         public void TestEnricherWithAbsoluteEpisodeNumber()
         {
+            var enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
+            this.CreateTestData();
+
             bool pass = true;
             foreach (var testProgram in this.testPrograms)
             {
                 try
                 {
-                    this.enricher.EnrichProgram(testProgram, false);
+                    enricher.EnrichProgram(testProgram, false);
                     if (testProgram.EpisodeNumberDisplay == testProgram.ExpectedEpisodeNumberDisplay)
                     {
                         Console.WriteLine(string.Format("Correctly matched {0} - {1}", testProgram.Title, testProgram.EpisodeNumberDisplay));   
@@ -76,6 +79,54 @@
             {
                 Assert.Fail();
             }
+        }
+
+        [Test]
+        public void TestMappingNameWithID()
+        {
+            var lawOrderProgram = new TestProgram("Law & Order: Special Victims Unit", "Identity", 0, "S06E12");
+            var seriesNameMap = new Dictionary<string, string>(1);
+            seriesNameMap.Add("Law & Order: Special Victims Unit", "id=75692");
+            mockConfig.Setup(x => x.getSeriesNameMap()).Returns(seriesNameMap);
+            var enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
+            enricher.EnrichProgram(lawOrderProgram, false);
+            Assert.IsTrue(lawOrderProgram.EpisodeIsEnriched());
+        }
+
+        [Test]
+        public void TestMappingRegexWithRegexReplace()
+        {
+            var lawOrderProgram = new TestProgram("Law & Order: New York", "Identity", 0, "S06E12");
+            var seriesNameMap = new Dictionary<string, string>(1);
+            seriesNameMap.Add("regex=Law & Order", "replace=Law and Order");
+            mockConfig.Setup(x => x.getSeriesNameMap()).Returns(seriesNameMap);
+            var enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
+            enricher.EnrichProgram(lawOrderProgram, false);
+            Assert.IsTrue(lawOrderProgram.EpisodeIsEnriched());
+        }
+
+        [Test]
+        public void TestMappingRegex()
+        {
+            var lawOrderProgram = new TestProgram("Stargate Atlantis123", "Common Ground", 0, "S03E07");
+            var seriesNameMap = new Dictionary<string, string>(1);
+            seriesNameMap.Add("regex=Stargate Atl.*", "Stargate Atlantis");
+            mockConfig.Setup(x => x.getSeriesNameMap()).Returns(seriesNameMap);
+            var enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
+            enricher.EnrichProgram(lawOrderProgram, false);
+            Assert.IsTrue(lawOrderProgram.EpisodeIsEnriched());
+        }
+
+        [Test]
+        public void TestRegularMapping()
+        {
+            var lawOrderProgram = new TestProgram("Stargate Atlantis123", "Common Ground", 0, "S03E07");
+            var seriesNameMap = new Dictionary<string, string>(1);
+            seriesNameMap.Add("Stargate Atlantis123", "Stargate Atlantis");
+            mockConfig.Setup(x => x.getSeriesNameMap()).Returns(seriesNameMap);
+            var enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
+            enricher.EnrichProgram(lawOrderProgram, false);
+            Assert.IsTrue(lawOrderProgram.EpisodeIsEnriched());
         }
     }
 }
