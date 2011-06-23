@@ -36,6 +36,7 @@ namespace GuideEnricher.tvdb
 
         private TvdbHandler tvdbHandler;
         private Dictionary<string, string> seriesNameMapping;
+        private Dictionary<string, int> seriesIDMapping = new Dictionary<string, int>();
         private Dictionary<string, string> seriesNameRegex = new Dictionary<string, string>();
         private List<string> seriesIgnore = new List<string>();
 
@@ -139,9 +140,18 @@ namespace GuideEnricher.tvdb
 
             foreach (string regex in this.seriesNameMapping.Keys)
             {
+                if (this.seriesNameMapping[regex].StartsWith("id="))
+                {
+                    this.seriesIDMapping.Add(regex, int.Parse(this.seriesNameMapping[regex].Substring(3)));
+                    this.seriesNameMapping.Remove(regex);
+                    break;
+                }
+
                 if (regex.StartsWith("regex="))
                 {
                     this.seriesNameRegex.Add(regex.Substring(6), this.seriesNameMapping[regex]);
+                    this.seriesNameMapping.Remove(regex);
+                    break;
                 }
             }
         }
@@ -167,9 +177,9 @@ namespace GuideEnricher.tvdb
             // TODO: A few things here.  We should add more intelligence when there is more then 1 match
             // Things like default to (US) or (UK) or what ever is usally the case.  Also, perhaps a global setting that would always take newest series first...
 
-            if (seriesName.StartsWith("id="))
+            if (this.seriesIDMapping.ContainsKey(seriesName))
             {
-                var seriesid = Convert.ToInt32(seriesName.Substring(3));
+                var seriesid = this.seriesIDMapping[seriesName];
                 log.DebugFormat("SD-TvDb: Direct mapping: series: {0} id: {1}", seriesName, seriesid);
                 return seriesid;
             }
@@ -195,7 +205,15 @@ namespace GuideEnricher.tvdb
                     var regex = new Regex(regexEntry);
                     if (regex.IsMatch(seriesName))
                     {
-                        searchSeries = seriesNameRegex[regexEntry];
+                        if (seriesNameRegex[regexEntry].StartsWith("replace="))
+                        {
+                            searchSeries = regex.Replace(seriesName, seriesNameRegex[regexEntry].Substring(8));
+                        }
+                        else
+                        {
+                            searchSeries = seriesNameRegex[regexEntry];
+                        }
+
                         log.DebugFormat("SD-TvDb: Regex mapping: series: {0} regex: {1} seriesMatch: {2}", seriesName, regexEntry, searchSeries);
                         break;
                     }
