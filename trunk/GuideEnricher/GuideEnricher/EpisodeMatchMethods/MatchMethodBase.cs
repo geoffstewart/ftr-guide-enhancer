@@ -24,6 +24,8 @@
         protected bool Matched(GuideEnricherProgram guideProgram, TvdbEpisode episode)
         {
             this.SuccessfulMatches++;
+            guideProgram.EpisodeNumber = episode.EpisodeNumber;
+            guideProgram.SeriesNumber = episode.SeasonNumber;
             guideProgram.EpisodeNumberDisplay = Enricher.FormatSeasonAndEpisode(episode.SeasonNumber, episode.EpisodeNumber);
             if (bool.Parse(Config.GetInstance().getProperty("updateSubtitles")))
             {
