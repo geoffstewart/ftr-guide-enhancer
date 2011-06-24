@@ -102,7 +102,7 @@
             foreach (var upcomingProgram in upcomingPrograms)
             {
                 var guideProgram = new GuideEnricherProgram(this.tvGuideService.GetProgramById((Guid)upcomingProgram.GuideProgramId));
-                if (!guideProgram.Matched || bool.Parse(this.config.getProperty("updateSubtitles")))
+                if (!guideProgram.Matched || bool.Parse(this.config.getProperty("updateAll")))
                 {
                     this.EnrichSingleProgram(guideProgram, forceRefresh);
                     

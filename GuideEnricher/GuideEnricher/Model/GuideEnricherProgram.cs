@@ -25,8 +25,12 @@ namespace GuideEnricher.Model
                 return false;
             }
 
-            var seasonEpisodeFormat = new Regex("S[0-9]+E[0-9]+");
-            return seasonEpisodeFormat.IsMatch(this.EpisodeNumberDisplay);
+            if (!this.guideProgram.SeriesNumber.HasValue)
+            {
+                return false;
+            }
+
+            return this.EpisodeNumberDisplay.Equals(Enricher.FormatSeasonAndEpisode(this.guideProgram.SeriesNumber.Value, this.guideProgram.EpisodeNumber.Value));
         }
 
         public GuideProgram GuideProgram { get { return this.guideProgram; } }
