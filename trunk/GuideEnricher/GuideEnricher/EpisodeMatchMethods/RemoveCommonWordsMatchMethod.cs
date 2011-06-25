@@ -10,7 +10,7 @@ namespace GuideEnricher.EpisodeMatchMethods
     public class RemoveCommonWordsMatchMethod : MatchMethodBase
     {
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private const string COMMON_WORDS_REG_EX = @"1|2|3|4|5|6|7|8|9|0|\(|\)|&|part|in|,|is|and|a|the|I|X|V|-|%|percent|!|#";
+        private const string COMMON_WORDS_REG_EX = @"1|2|3|4|5|6|7|8|9|0|\(|\)|&|part|in|,|is|and|a|the|I|X|V|-|%|percent|!|#| ";
 
         public override string MethodName
         {
@@ -21,8 +21,8 @@ namespace GuideEnricher.EpisodeMatchMethods
         {
             if (string.IsNullOrEmpty(guideProgram.SubTitle))
             {
-                this.log.DebugFormat("Cannot use match method [{0}] {1} does not have a subtitle", this.MethodName, guideProgram.Title);
-                return this.Unmatched(guideProgram);
+                this.log.DebugFormat("[{0}] {1} - {2:MM/dd hh:mm tt} does not have a subtitle", this.MethodName, guideProgram.Title, guideProgram.StartTime);
+                return false;
             }
 
             this.MatchAttempts++;

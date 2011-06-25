@@ -29,6 +29,7 @@ namespace GuideEnricher.tvdb
     {
         private const string TVDBID = "BBB734ABE146900D";  // mine, don't abuse it!!!
         private const string MODULE = "GuideEnricher";
+        private const string REMOVE_PUNCTUATION = @"[^ a-zA-Z]";
         
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IConfiguration config;
@@ -224,11 +225,12 @@ namespace GuideEnricher.tvdb
 
             log.DebugFormat("SD-TvDb: Search for {0} return {1} results", searchSeries, searchResults.Count);
             
+            var seriesWithoutPunctuation = Regex.Replace(searchSeries, REMOVE_PUNCTUATION, string.Empty);
             if (searchResults.Count >= 1)
             {
                 for (int i = 0; i < searchResults.Count; i++)
                 {
-                    if (searchSeries.ToLower().Equals(searchResults[i].SeriesName.ToLower()))
+                    if (seriesWithoutPunctuation.Equals(Regex.Replace(searchResults[i].SeriesName, REMOVE_PUNCTUATION, string.Empty), StringComparison.InvariantCultureIgnoreCase))
                     {
                         var seriesId = searchResults[i].Id;
                         log.DebugFormat("SD-TvDb: series: {0} id: {1}", searchSeries, seriesId);
@@ -241,7 +243,7 @@ namespace GuideEnricher.tvdb
             }
 
             log.DebugFormat("Cannot find series ID for {0}", seriesName);
-            throw new NoSeriesMatchException();
+            return 0;
         }
 
         private void ThrowIfSeriesIgnored(string seriesName)

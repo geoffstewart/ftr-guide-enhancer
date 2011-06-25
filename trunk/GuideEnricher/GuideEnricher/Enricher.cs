@@ -12,6 +12,7 @@
     using GuideEnricher.Model;
     using GuideEnricher.tvdb;
     using log4net;
+    using System.Linq;
 
     public class Enricher
     {
@@ -21,10 +22,8 @@
         private readonly ITvGuideService tvGuideService;
         private readonly IConfiguration config;
         private readonly ILogService ftrlogAgent;
-        private readonly List<Guid> uniqueProgramsOnly;
         private readonly List<IEpisodeMatchMethod> matchMethods;
         private TvdbLibAccess tvdbLibAccess;
-        private ArrayList noEpisodeMatchList;
 
         private const string MODULE = "GuideEnricher";
 
@@ -32,7 +31,6 @@
         {
             this.config = configuration;
             this.enrichedPrograms = new List<GuideEnricherProgram>();
-            this.uniqueProgramsOnly = new List<Guid>();
             this.ftrlogAgent = ftrLogService;
             this.tvGuideService = tvGuideService;
             this.tvSchedulerService = tvSchedulerService;
@@ -41,8 +39,6 @@
 
         public void EnrichUpcomingPrograms(ScheduleType scheduleType)
         {
-            this.noEpisodeMatchList = new ArrayList();
-
             using (this.tvdbLibAccess = new TvdbLibAccess(this.config, this.matchMethods))
             {
                 foreach (var scheduleSummary in this.tvSchedulerService.GetAllSchedules(ChannelType.Television, scheduleType, true))
@@ -102,9 +98,42 @@
             foreach (var upcomingProgram in upcomingPrograms)
             {
                 var guideProgram = new GuideEnricherProgram(this.tvGuideService.GetProgramById((Guid)upcomingProgram.GuideProgramId));
-                if (!guideProgram.Matched || bool.Parse(this.config.getProperty("updateAll")))
+                if ((!guideProgram.Matched || bool.Parse(this.config.getProperty("updateAll"))) && !guideProgram.Ignore)
                 {
-                    this.EnrichSingleProgram(guideProgram, forceRefresh);
+                    var programWithSameSubTitle = this.enrichedPrograms.Where(x => x.Title == guideProgram.Title && x.SubTitle == guideProgram.SubTitle).FirstOrDefault();
+                    if (programWithSameSubTitle != null)
+                    {
+                        guideProgram.EpisodeNumberDisplay = programWithSameSubTitle.EpisodeNumberDisplay;
+                        guideProgram.SeriesNumber = programWithSameSubTitle.SeriesNumber;
+                        guideProgram.EpisodeNumber = programWithSameSubTitle.EpisodeNumber;
+
+                        if (bool.Parse(config.getProperty("updateSubtitles")))
+                        {
+                            guideProgram.SubTitle = programWithSameSubTitle.SubTitle;
+                        }
+
+                        guideProgram.Matched = true;
+                        this.enrichedPrograms.Add(guideProgram);
+                    }
+                    else
+                    {
+                        var programWithSameTitle = this.enrichedPrograms.Where(x => x.Title == guideProgram.Title).FirstOrDefault();
+                        if (programWithSameTitle != null)
+                        {
+                            guideProgram.TheTVDBSeriesID = programWithSameTitle.TheTVDBSeriesID;
+                        }
+
+                        this.tvdbLibAccess.EnrichProgram(guideProgram, forceRefresh);
+                        
+                        if (guideProgram.Matched)
+                        {
+                            this.enrichedPrograms.Add(guideProgram);
+                        }
+                        else
+                        {
+                            guideProgram.Ignore = true;
+                        }
+                    }
                     
                     // Force a refresh only once
                     forceRefresh = false;
@@ -116,40 +145,6 @@
             }
 
             return unmatchedEpisodes;
-        }
-
-        public void EnrichSingleProgram(GuideEnricherProgram guideProgram, bool forceRefresh)
-        {
-            if (this.uniqueProgramsOnly.Contains(guideProgram.GuideProgramId))
-            {
-                return;
-            }
-
-            this.uniqueProgramsOnly.Add(guideProgram.GuideProgramId);
-            
-            try
-            {
-                if (this.noEpisodeMatchList.Contains(guideProgram.Title + "-" + guideProgram.SubTitle))
-                {
-                    return;
-                }
-
-                this.tvdbLibAccess.EnrichProgram(guideProgram, forceRefresh);
-            }
-            catch (NoEpisodeMatchException)
-            {
-                this.noEpisodeMatchList.Add(guideProgram.Title + "-" + guideProgram.SubTitle);
-                return;
-            }
-            catch (DataEnricherException)
-            {
-                return;
-            }
-
-            if (guideProgram.Matched)
-            {
-                this.enrichedPrograms.Add(guideProgram);
-            }
         }
 
         private void UpdateFTRGuideData()

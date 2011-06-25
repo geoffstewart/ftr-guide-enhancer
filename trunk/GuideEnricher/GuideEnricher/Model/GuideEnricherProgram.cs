@@ -3,6 +3,7 @@ namespace GuideEnricher.Model
     using System;
     using System.Text.RegularExpressions;
     using ForTheRecord.Entities;
+    using System.Linq;
 
     public class GuideEnricherProgram : GuideProgram
     {
@@ -33,6 +34,18 @@ namespace GuideEnricher.Model
             return this.EpisodeNumberDisplay.Equals(Enricher.FormatSeasonAndEpisode(this.guideProgram.SeriesNumber.Value, this.guideProgram.EpisodeNumber.Value));
         }
 
+//        public override bool Equals(object obj)
+//        {
+//            if (obj is IProgramSummary)
+//            {
+//                var comparedGuideProgram = (IProgramSummary) obj;
+//                return this.Title.Equals(comparedGuideProgram.Title) && this.SubTitle.Equals(comparedGuideProgram.SubTitle);
+//            }
+//
+            // If it doesn't implement IProgramSummary we know it's not equal
+//            return false;
+//        }
+
         public GuideProgram GuideProgram { get { return this.guideProgram; } }
         
         public int LookupSeasonNumber { get; set; }
@@ -40,6 +53,10 @@ namespace GuideEnricher.Model
         public int LookupEpisodeNumber { get; set; }
 
         public bool Matched { get; set; }
+
+        public bool Ignore { get; set; }
+
+        public int TheTVDBSeriesID { get; set; }
         
         #region GuideProgram members
         public string CreateProgramTitle()
