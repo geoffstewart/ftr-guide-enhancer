@@ -21,7 +21,7 @@ namespace GuideEnricher.EpisodeMatchMethods
         {
             if (string.IsNullOrEmpty(guideProgram.SubTitle))
             {
-                this.log.DebugFormat("Cannot use match method [{0}] {1} does not have a subtitle", this.MethodName, guideProgram.Title);
+                this.log.DebugFormat("[{0}] {1} - {2:MM/dd hh:mm tt} does not have a subtitle", this.MethodName, guideProgram.Title, guideProgram.StartTime);
                 return false;
             }
 

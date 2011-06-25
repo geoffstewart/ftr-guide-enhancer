@@ -11,7 +11,6 @@ namespace GuideEnricher.Tests
         {
             var methods = EpisodeMatchMethodLoader.GetMatchMethods();
             Assert.IsInstanceOf(typeof(EpisodeTitleMatchMethod), methods[0]);
-            //Assert.IsInstanceOf(typeof(AbsoluteEpisodeNumberMatchMethod), methods[1]);
             Assert.IsInstanceOf(typeof(NoPunctuationMatchMethod), methods[1]);
             Assert.IsInstanceOf(typeof(RemoveCommonWordsMatchMethod), methods[2]);
         }

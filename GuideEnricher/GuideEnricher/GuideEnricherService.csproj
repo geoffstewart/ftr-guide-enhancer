@@ -130,7 +130,6 @@
     <Compile Include="Config\SeriesNameMapCollection.cs" />
     <Compile Include="Config\SeriesNameMapsSection.cs" />
     <Compile Include="test\TestForTheRecordListener.cs" />
-    <Compile Include="exception\NoEpisodeMatchException.cs" />
     <Compile Include="exception\NoSeriesMatchException.cs" />
     <Compile Include="exception\SeriesIgnoredException.cs" />
     <Compile Include="tvdb\TvdbLibAccess.cs" />
