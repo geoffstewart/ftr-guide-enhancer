@@ -22,6 +22,9 @@
         private readonly ILogService ftrlogAgent;
         private readonly List<IEpisodeMatchMethod> matchMethods;
         private readonly TvdbLibAccess tvdbLibAccess;
+        private readonly Dictionary<string, GuideEnricherSeries> seriesToEnrich;
+        private bool updateMatchedEpisodes;
+        private bool updateSubtitlesParameter;
 
         private const string MODULE = "GuideEnricher";
 
@@ -34,35 +37,17 @@
             this.tvSchedulerService = tvSchedulerService;
             this.tvdbLibAccess = tvdbLibAccess;
             this.matchMethods = matchMethods;
+            this.seriesToEnrich = new Dictionary<string, GuideEnricherSeries>();
+            updateMatchedEpisodes = bool.Parse(this.config.getProperty("updateAll"));
+            updateSubtitlesParameter = bool.Parse(this.config.getProperty("updateSubtitles"));
         }
 
-        public void EnrichUpcomingPrograms(ScheduleType scheduleType)
+        public void EnrichUpcomingPrograms()
         {
-            bool updateMatchedEpisodes = bool.Parse(config.getProperty("updateAll"));
-            bool updateSubtitles = bool.Parse(config.getProperty("updateSubtitles"));
-            // GetUpcomingGuidePrograms seems to be missing som info
-            // var programs = this.tvSchedulerService.GetUpcomingGuidePrograms(scheduleType, true);
-            var programs = this.tvSchedulerService.GetAllUpcomingPrograms(scheduleType, true);
-            var seriesToEnrich = new Dictionary<string, GuideEnricherSeries>();
+            this.AddUpcomingPrograms(ScheduleType.Suggestion);
+            this.AddUpcomingPrograms(ScheduleType.Recording);
 
-            foreach (var program in programs)
-            {
-                if (!program.GuideProgramId.HasValue)
-                {
-                    log.DebugFormat("[{0}] {1} - {2:MM/dd hh:mm tt} does not have a guide program entry", program.Title, program.StartTime);
-                    break;
-                }
-
-                var guideProgram = new GuideEnricherEntities(this.tvGuideService.GetProgramById(program.GuideProgramId.Value));
-                if (!seriesToEnrich.ContainsKey(guideProgram.Title))
-                {
-                    seriesToEnrich.Add(guideProgram.Title, new GuideEnricherSeries(guideProgram.Title, updateMatchedEpisodes, updateSubtitles));
-                }
-
-                seriesToEnrich[guideProgram.Title].AddProgram(guideProgram);
-            }
-
-            foreach (var series in seriesToEnrich.Values)
+            foreach (var series in this.seriesToEnrich.Values)
             {
                 this.EnrichSeries(series);
             }
@@ -73,7 +58,7 @@
             }
             else
             {
-                var message = string.Format("No {0} entries were enriched", scheduleType);
+                var message = string.Format("No entries were enriched");
                 this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, message);
                 log.Debug(message);
             }
@@ -81,6 +66,28 @@
             foreach (var matchMethod in this.matchMethods)
             {
                 log.DebugFormat("Match method {0} matched {1} out of {2} attempts", matchMethod.MethodName, matchMethod.SuccessfulMatches, matchMethod.MatchAttempts);
+            }
+        }
+
+        private void AddUpcomingPrograms(ScheduleType scheduleType)
+        {
+            var programs = this.tvSchedulerService.GetAllUpcomingPrograms(scheduleType, true);
+
+            foreach (var program in programs)
+            {
+                if (!program.GuideProgramId.HasValue)
+                {
+                    log.DebugFormat("[{0}] {1} - {2:MM/dd hh:mm tt} does not have a guide program entry", program.Title, program.StartTime);
+                    break;
+                }
+
+                var guideProgram = new GuideEnricherEntities(this.tvGuideService.GetProgramById(program.GuideProgramId.Value));
+                if (!this.seriesToEnrich.ContainsKey(guideProgram.Title))
+                {
+                    this.seriesToEnrich.Add(guideProgram.Title, new GuideEnricherSeries(guideProgram.Title, this.updateMatchedEpisodes, this.updateSubtitlesParameter));
+                }
+
+                this.seriesToEnrich[guideProgram.Title].AddProgram(guideProgram);
             }
         }
 
