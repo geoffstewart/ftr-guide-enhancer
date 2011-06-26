@@ -51,7 +51,8 @@
             {
                 try
                 {
-                    enricher.EnrichProgram(testProgram, false);
+                    var series = enricher.GetTvdbSeries(enricher.getSeriesId(testProgram.Title),false);
+                    enricher.EnrichProgram(testProgram, series);
                     if (testProgram.EpisodeNumberDisplay == testProgram.ExpectedEpisodeNumberDisplay)
                     {
                         Console.WriteLine(string.Format("Correctly matched {0} - {1}", testProgram.Title, testProgram.EpisodeNumberDisplay));   
@@ -89,7 +90,8 @@
             seriesNameMap.Add("Law & Order: Special Victims Unit", "id=75692");
             mockConfig.Setup(x => x.getSeriesNameMap()).Returns(seriesNameMap);
             var enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
-            enricher.EnrichProgram(lawOrderProgram, false);
+            var series = enricher.GetTvdbSeries(enricher.getSeriesId(lawOrderProgram.Title), false);
+            enricher.EnrichProgram(lawOrderProgram, series);
             Assert.IsTrue(lawOrderProgram.EpisodeIsEnriched());
         }
 
@@ -101,7 +103,8 @@
             seriesNameMap.Add("regex=Law & Order", "replace=Law and Order");
             mockConfig.Setup(x => x.getSeriesNameMap()).Returns(seriesNameMap);
             var enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
-            enricher.EnrichProgram(lawOrderProgram, false);
+            var series = enricher.GetTvdbSeries(enricher.getSeriesId(lawOrderProgram.Title), false);
+            enricher.EnrichProgram(lawOrderProgram, series);
             Assert.IsTrue(lawOrderProgram.EpisodeIsEnriched());
         }
 
@@ -113,7 +116,8 @@
             seriesNameMap.Add("regex=Stargate Atl.*", "Stargate Atlantis");
             mockConfig.Setup(x => x.getSeriesNameMap()).Returns(seriesNameMap);
             var enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
-            enricher.EnrichProgram(lawOrderProgram, false);
+            var series = enricher.GetTvdbSeries(enricher.getSeriesId(lawOrderProgram.Title), false);
+            enricher.EnrichProgram(lawOrderProgram, series);
             Assert.IsTrue(lawOrderProgram.EpisodeIsEnriched());
         }
 
@@ -125,7 +129,8 @@
             seriesNameMap.Add("Stargate Atlantis123", "Stargate Atlantis");
             mockConfig.Setup(x => x.getSeriesNameMap()).Returns(seriesNameMap);
             var enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
-            enricher.EnrichProgram(lawOrderProgram, false);
+            var series = enricher.GetTvdbSeries(enricher.getSeriesId(lawOrderProgram.Title), false);
+            enricher.EnrichProgram(lawOrderProgram, series);
             Assert.IsTrue(lawOrderProgram.EpisodeIsEnriched());
         }
     }

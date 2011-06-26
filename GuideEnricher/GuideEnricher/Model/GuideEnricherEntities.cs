@@ -1,22 +1,21 @@
 namespace GuideEnricher.Model
 {
     using System;
-    using System.Text.RegularExpressions;
     using ForTheRecord.Entities;
-    using System.Linq;
 
-    public class GuideEnricherProgram : GuideProgram
+    public class GuideEnricherEntities : GuideProgram, IProgramSummary
     {
         protected GuideProgram guideProgram;
 
-        protected GuideEnricherProgram()
+        protected GuideEnricherEntities()
         {
         }
 
-        public GuideEnricherProgram(GuideProgram guideProgram)
+        public GuideEnricherEntities(GuideProgram guideProgram)
         {
             this.guideProgram = guideProgram;
             this.Matched = this.EpisodeIsEnriched();
+            this.OriginalSubTitle = this.SubTitle;
         }
 
         public bool EpisodeIsEnriched()
@@ -34,20 +33,10 @@ namespace GuideEnricher.Model
             return this.EpisodeNumberDisplay.Equals(Enricher.FormatSeasonAndEpisode(this.guideProgram.SeriesNumber.Value, this.guideProgram.EpisodeNumber.Value));
         }
 
-//        public override bool Equals(object obj)
-//        {
-//            if (obj is IProgramSummary)
-//            {
-//                var comparedGuideProgram = (IProgramSummary) obj;
-//                return this.Title.Equals(comparedGuideProgram.Title) && this.SubTitle.Equals(comparedGuideProgram.SubTitle);
-//            }
-//
-            // If it doesn't implement IProgramSummary we know it's not equal
-//            return false;
-//        }
-
         public GuideProgram GuideProgram { get { return this.guideProgram; } }
-        
+
+        public string OriginalSubTitle { get; set; }
+
         public int LookupSeasonNumber { get; set; }
 
         public int LookupEpisodeNumber { get; set; }
@@ -56,8 +45,11 @@ namespace GuideEnricher.Model
 
         public bool Ignore { get; set; }
 
-        public int TheTVDBSeriesID { get; set; }
-        
+        public override string ToString()
+        {
+            return string.Format("{0}-{1}", this.Title, this.SubTitle);
+        }
+
         #region GuideProgram members
         public string CreateProgramTitle()
         {

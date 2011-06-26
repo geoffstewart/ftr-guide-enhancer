@@ -19,15 +19,14 @@
 
         public abstract string MethodName { get; }
 
-        public abstract bool Match(GuideEnricherProgram enrichedGuideProgram, List<TvdbEpisode> episodes);
+        public abstract bool Match(GuideEnricherEntities enrichedGuideProgram, List<TvdbEpisode> episodes);
 
-        protected bool Matched(GuideEnricherProgram guideProgram, TvdbEpisode episode)
+        protected bool Matched(GuideEnricherEntities guideProgram, TvdbEpisode episode)
         {
             this.SuccessfulMatches++;
             guideProgram.EpisodeNumber = episode.EpisodeNumber;
             guideProgram.SeriesNumber = episode.SeasonNumber;
             guideProgram.EpisodeNumberDisplay = Enricher.FormatSeasonAndEpisode(episode.SeasonNumber, episode.EpisodeNumber);
-            guideProgram.TheTVDBSeriesID = episode.SeriesId;
             
             if (bool.Parse(Config.GetInstance().getProperty("updateSubtitles")))
             {
@@ -38,7 +37,7 @@
             return true;
         }
 
-        protected bool Unmatched(GuideEnricherProgram guideProgram)
+        protected bool Unmatched(GuideEnricherEntities guideProgram)
         {
             this.log.DebugFormat("[{0}] Could not match {1} - {2}", this.MethodName, guideProgram.Title, guideProgram.SubTitle);
             return false;
