@@ -8,6 +8,7 @@
     {
         private readonly bool updateAll;
         private readonly bool updateSubtitles;
+        private static readonly GuideProgramEqualityComparer guideProgramEqualityComparer = new GuideProgramEqualityComparer();
 
         public GuideEnricherSeries(String title, bool updateAllParameter, bool updateSubtitlesParameter)
         {
@@ -42,11 +43,17 @@
         {
             if (!this.updateAll && program.Matched)
             {
-                this.IgnoredPrograms.Add(program);
+                //if (!this.IgnoredPrograms.Contains(program, guideProgramEqualityComparer))
+                {
+                    this.IgnoredPrograms.Add(program);  
+                }
             }
             else
             {
-                this.PendingPrograms.Add(program);
+                //if (!this.PendingPrograms.Contains(program, guideProgramEqualityComparer))
+                {
+                    this.PendingPrograms.Add(program);
+                }
             }
         }
 
