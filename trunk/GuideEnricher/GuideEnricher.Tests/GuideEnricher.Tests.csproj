@@ -63,6 +63,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GuideEnricher\References\FTR\ForTheRecord.ServiceAgents.dll</HintPath>
     </Reference>
+    <Reference Include="ForTheRecord.ServiceContracts, Version=1.6.1.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GuideEnricher\References\FTR\ForTheRecord.ServiceContracts.dll</HintPath>
+    </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GuideEnricher\References\Log4Net\log4net.dll</HintPath>

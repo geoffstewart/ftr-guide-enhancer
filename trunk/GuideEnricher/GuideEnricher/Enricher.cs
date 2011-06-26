@@ -11,6 +11,7 @@
     using GuideEnricher.tvdb;
     using log4net;
     using TvdbLib.Data;
+    
     public class Enricher
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -20,64 +21,70 @@
         private readonly IConfiguration config;
         private readonly ILogService ftrlogAgent;
         private readonly List<IEpisodeMatchMethod> matchMethods;
-        private TvdbLibAccess tvdbLibAccess;
+        private readonly TvdbLibAccess tvdbLibAccess;
 
         private const string MODULE = "GuideEnricher";
 
-        public Enricher(IConfiguration configuration, ILogService ftrLogService, ITvGuideService tvGuideService, ITvSchedulerService tvSchedulerService)
+        public Enricher(IConfiguration configuration, ILogService ftrLogService, ITvGuideService tvGuideService, ITvSchedulerService tvSchedulerService, TvdbLibAccess tvdbLibAccess, List<IEpisodeMatchMethod> matchMethods)
         {
             this.config = configuration;
             this.enrichedPrograms = new List<GuideEnricherEntities>();
             this.ftrlogAgent = ftrLogService;
             this.tvGuideService = tvGuideService;
             this.tvSchedulerService = tvSchedulerService;
-            this.matchMethods = EpisodeMatchMethodLoader.GetMatchMethods();
+            this.tvdbLibAccess = tvdbLibAccess;
+            this.matchMethods = matchMethods;
         }
 
         public void EnrichUpcomingPrograms(ScheduleType scheduleType)
         {
             bool updateMatchedEpisodes = bool.Parse(config.getProperty("updateAll"));
             bool updateSubtitles = bool.Parse(config.getProperty("updateSubtitles"));
-            using (this.tvdbLibAccess = new TvdbLibAccess(this.config, this.matchMethods))
+            // GetUpcomingGuidePrograms seems to be missing som info
+            // var programs = this.tvSchedulerService.GetUpcomingGuidePrograms(scheduleType, true);
+            var programs = this.tvSchedulerService.GetAllUpcomingPrograms(scheduleType, true);
+            var seriesToEnrich = new Dictionary<string, GuideEnricherSeries>();
+
+            foreach (var program in programs)
             {
-                UpcomingGuideProgram[] programs = this.tvSchedulerService.GetUpcomingGuidePrograms(scheduleType, true);
-                var seriesToEnrich = new Dictionary<string, GuideEnricherSeries>();
-
-                foreach (UpcomingGuideProgram program in programs)
+                if (!program.GuideProgramId.HasValue)
                 {
-                    var guideProgram = new GuideEnricherEntities(this.tvGuideService.GetProgramById(program.GuideProgramId));
-                    if (!seriesToEnrich.ContainsKey(guideProgram.Title))
-                    {
-                        seriesToEnrich.Add(guideProgram.Title, new GuideEnricherSeries(guideProgram.Title, updateMatchedEpisodes, updateSubtitles));
-                    }
-
-                    seriesToEnrich[guideProgram.Title].AddProgram(guideProgram);
+                    log.DebugFormat("[{0}] {1} - {2:MM/dd hh:mm tt} does not have a guide program entry", program.Title, program.StartTime);
+                    break;
                 }
 
-                foreach (var series in seriesToEnrich.Values)
+                var guideProgram = new GuideEnricherEntities(this.tvGuideService.GetProgramById(program.GuideProgramId.Value));
+                if (!seriesToEnrich.ContainsKey(guideProgram.Title))
                 {
-                    this.EnrichSeries(series);
+                    seriesToEnrich.Add(guideProgram.Title, new GuideEnricherSeries(guideProgram.Title, updateMatchedEpisodes, updateSubtitles));
                 }
 
-                if (this.enrichedPrograms.Count > 0)
-                {
-                    this.UpdateFTRGuideData();
-                }
-                else
-                {
-                    var message = string.Format("No {0} entries were enriched", scheduleType);
-                    this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, message);
-                    log.Debug(message);
-                }
+                seriesToEnrich[guideProgram.Title].AddProgram(guideProgram);
+            }
 
-                foreach (var matchMethod in this.matchMethods)
-                {
-                    log.DebugFormat("Match method {0} matched {1} out of {2} attempts", matchMethod.MethodName, matchMethod.SuccessfulMatches, matchMethod.MatchAttempts);
-                }
+            foreach (var series in seriesToEnrich.Values)
+            {
+                this.EnrichSeries(series);
+            }
+
+            if (this.enrichedPrograms.Count > 0)
+            {
+                this.UpdateFTRGuideData();
+            }
+            else
+            {
+                var message = string.Format("No {0} entries were enriched", scheduleType);
+                this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, message);
+                log.Debug(message);
+            }
+
+            foreach (var matchMethod in this.matchMethods)
+            {
+                log.DebugFormat("Match method {0} matched {1} out of {2} attempts", matchMethod.MethodName, matchMethod.SuccessfulMatches, matchMethod.MatchAttempts);
             }
         }
 
-        private void EnrichSeries(GuideEnricherSeries series)
+        public void EnrichSeries(GuideEnricherSeries series)
         {
             series.TvDbSeriesID = tvdbLibAccess.getSeriesId(series.Title);
             if (series.TvDbSeriesID == 0)
