@@ -195,8 +195,7 @@ namespace GuideEnricher
                     using (var tvdbLibAccess = new TvdbLibAccess(this.config, matchMethods))
                     {
                         var enricher = new Enricher(this.config, this.ftrlogAgent, tvGuideServiceAgent, tvSchedulerServiceAgent, tvdbLibAccess, matchMethods);
-                        enricher.EnrichUpcomingPrograms(ScheduleType.Suggestion);
-                        enricher.EnrichUpcomingPrograms(ScheduleType.Recording);
+                        enricher.EnrichUpcomingPrograms();
                     }
                 }
             }
