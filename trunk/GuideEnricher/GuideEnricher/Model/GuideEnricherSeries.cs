@@ -43,14 +43,14 @@
         {
             if (!this.updateAll && program.Matched)
             {
-                //if (!this.IgnoredPrograms.Contains(program, guideProgramEqualityComparer))
+                if (!this.IgnoredPrograms.Contains(program, guideProgramEqualityComparer))
                 {
                     this.IgnoredPrograms.Add(program);  
                 }
             }
             else
             {
-                //if (!this.PendingPrograms.Contains(program, guideProgramEqualityComparer))
+                if (!this.PendingPrograms.Contains(program, guideProgramEqualityComparer))
                 {
                     this.PendingPrograms.Add(program);
                 }
