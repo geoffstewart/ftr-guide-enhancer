@@ -64,35 +64,6 @@ namespace GuideEnricher.tvdb
             this.IntializeRegexMappings();
         }
 
-        //public void EnrichProgram(GuideEnricherProgram existingProgram, bool forceRefresh)
-        //{
-        //    log.DebugFormat("Starting lookup for {0} - {1}", existingProgram.Title, existingProgram.SubTitle);
-        //    var seriesId = this.getSeriesId(existingProgram.Title);
-
-        //    TvdbSeries tvdbSeries = null;
-        //    tvdbSeries = GetTvdbSeries(seriesId, tvdbSeries, forceRefresh);
-
-        //    if (tvdbSeries == null)
-        //    {
-        //        log.ErrorFormat("TVDB issue getting series info for {0}", existingProgram.Title);
-        //        return;
-        //    }
-
-        //    if (config.getProperty("dumpepisodes").ToUpper() == "TRUE")
-        //    {
-        //        this.DumpSeriesEpisodes(tvdbSeries);
-        //    }
-
-        //    foreach (var matchMethod in this.matchMethods)
-        //    {
-        //        if (matchMethod.Match(existingProgram, tvdbSeries.Episodes))
-        //        {
-        //            existingProgram.Matched = true;
-        //            break;
-        //        }
-        //    }
-        //}
-
         public void EnrichProgram(GuideEnricherEntities existingProgram, TvdbSeries tvdbSeries)
         {
             log.DebugFormat("Starting lookup for {0} - {1}", existingProgram.Title, existingProgram.SubTitle);

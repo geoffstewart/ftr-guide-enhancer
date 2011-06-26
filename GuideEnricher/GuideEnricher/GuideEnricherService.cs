@@ -17,6 +17,7 @@ namespace GuideEnricher
     using ForTheRecord.Entities;
     using ForTheRecord.ServiceAgents;
     using GuideEnricher.Config;
+    using GuideEnricher.tvdb;
     using log4net;
 
     /**
@@ -190,9 +191,13 @@ namespace GuideEnricher
             {
                 using (var tvSchedulerServiceAgent = new TvSchedulerServiceAgent() )
                 {
-                    var enricher = new Enricher(this.config, this.ftrlogAgent, tvGuideServiceAgent, tvSchedulerServiceAgent);
-                    enricher.EnrichUpcomingPrograms(ScheduleType.Suggestion);
-                    enricher.EnrichUpcomingPrograms(ScheduleType.Recording);
+                    var matchMethods = EpisodeMatchMethodLoader.GetMatchMethods();
+                    using (var tvdbLibAccess = new TvdbLibAccess(this.config, matchMethods))
+                    {
+                        var enricher = new Enricher(this.config, this.ftrlogAgent, tvGuideServiceAgent, tvSchedulerServiceAgent, tvdbLibAccess, matchMethods);
+                        enricher.EnrichUpcomingPrograms(ScheduleType.Suggestion);
+                        enricher.EnrichUpcomingPrograms(ScheduleType.Recording);
+                    }
                 }
             }
         }

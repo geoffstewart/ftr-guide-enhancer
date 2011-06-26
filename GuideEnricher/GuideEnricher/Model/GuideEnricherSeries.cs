@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
 
-    class GuideEnricherSeries
+    public class GuideEnricherSeries
     {
         private readonly bool updateAll;
         private readonly bool updateSubtitles;
