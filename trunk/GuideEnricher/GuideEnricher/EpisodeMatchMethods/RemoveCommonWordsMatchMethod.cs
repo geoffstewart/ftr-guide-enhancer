@@ -17,7 +17,7 @@ namespace GuideEnricher.EpisodeMatchMethods
             get { return "Remove common words"; }
         }
 
-        public override bool Match(GuideEnricherProgram guideProgram, List<TvdbEpisode> episodes)
+        public override bool Match(GuideEnricherEntities guideProgram, List<TvdbEpisode> episodes)
         {
             if (string.IsNullOrEmpty(guideProgram.SubTitle))
             {

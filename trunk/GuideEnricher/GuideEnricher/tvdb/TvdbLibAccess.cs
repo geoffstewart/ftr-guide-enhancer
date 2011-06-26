@@ -64,24 +64,38 @@ namespace GuideEnricher.tvdb
             this.IntializeRegexMappings();
         }
 
-        public void EnrichProgram(GuideEnricherProgram existingProgram, bool forceRefresh)
+        //public void EnrichProgram(GuideEnricherProgram existingProgram, bool forceRefresh)
+        //{
+        //    log.DebugFormat("Starting lookup for {0} - {1}", existingProgram.Title, existingProgram.SubTitle);
+        //    var seriesId = this.getSeriesId(existingProgram.Title);
+
+        //    TvdbSeries tvdbSeries = null;
+        //    tvdbSeries = GetTvdbSeries(seriesId, tvdbSeries, forceRefresh);
+
+        //    if (tvdbSeries == null)
+        //    {
+        //        log.ErrorFormat("TVDB issue getting series info for {0}", existingProgram.Title);
+        //        return;
+        //    }
+
+        //    if (config.getProperty("dumpepisodes").ToUpper() == "TRUE")
+        //    {
+        //        this.DumpSeriesEpisodes(tvdbSeries);
+        //    }
+
+        //    foreach (var matchMethod in this.matchMethods)
+        //    {
+        //        if (matchMethod.Match(existingProgram, tvdbSeries.Episodes))
+        //        {
+        //            existingProgram.Matched = true;
+        //            break;
+        //        }
+        //    }
+        //}
+
+        public void EnrichProgram(GuideEnricherEntities existingProgram, TvdbSeries tvdbSeries)
         {
             log.DebugFormat("Starting lookup for {0} - {1}", existingProgram.Title, existingProgram.SubTitle);
-            var seriesId = this.getSeriesId(existingProgram.Title);
-
-            TvdbSeries tvdbSeries = null;
-            tvdbSeries = GetTvdbSeries(seriesId, tvdbSeries, forceRefresh);
-
-            if (tvdbSeries == null)
-            {
-                log.ErrorFormat("TVDB issue getting series info for {0}", existingProgram.Title);
-                return;
-            }
-
-            if (config.getProperty("dumpepisodes").ToUpper() == "TRUE")
-            {
-                this.DumpSeriesEpisodes(tvdbSeries, tvdbSeries.Episodes);
-            }
 
             foreach (var matchMethod in this.matchMethods)
             {
@@ -91,6 +105,20 @@ namespace GuideEnricher.tvdb
                     break;
                 }
             }
+        }
+
+        public void DebugEpisodeDump(TvdbSeries tvdbSeries)
+        {
+            if (config.getProperty("dumpepisodes").ToUpper() == "TRUE")
+            {
+                this.DumpSeriesEpisodes(tvdbSeries);
+            }
+        }
+
+        public TvdbSeries GetTvdbSeries(int seriesId, bool forceRefresh)
+        {
+            TvdbSeries tvdbSeries = null;
+            return GetTvdbSeries(seriesId, tvdbSeries, forceRefresh);
         }
 
         private TvdbSeries GetTvdbSeries(int seriesId, TvdbSeries tvdbSeries, bool forceRefresh)
@@ -118,10 +146,10 @@ namespace GuideEnricher.tvdb
             return tvdbSeries;
         }
 
-        private void DumpSeriesEpisodes(TvdbSeries series, List<TvdbEpisode> episodes)
+        private void DumpSeriesEpisodes(TvdbSeries series)
         {
             this.log.InfoFormat("Dumping episode info for {0}", series.SeriesName);
-            foreach (var episode in episodes)
+            foreach (var episode in series.Episodes)
             {
                 this.log.InfoFormat("S{0:00}E{1:00}-{2}", episode.SeasonNumber, episode.EpisodeNumber, episode.EpisodeName);
             }
@@ -141,19 +169,18 @@ namespace GuideEnricher.tvdb
 
             foreach (string regex in this.seriesNameMapping.Keys)
             {
-                if (this.seriesNameMapping[regex].StartsWith("id="))
-                {
-                    this.seriesIDMapping.Add(regex, int.Parse(this.seriesNameMapping[regex].Substring(3)));
-                    this.seriesNameMapping.Remove(regex);
-                    break;
-                }
-
                 if (regex.StartsWith("regex="))
                 {
                     this.seriesNameRegex.Add(regex.Substring(6), this.seriesNameMapping[regex]);
                     this.seriesNameMapping.Remove(regex);
                     break;
                 }
+                if (this.seriesNameMapping[regex].StartsWith("id="))
+                {
+                    this.seriesIDMapping.Add(regex, int.Parse(this.seriesNameMapping[regex].Substring(3)));
+                    this.seriesNameMapping.Remove(regex);
+                    break;
+                }                
             }
         }
 
@@ -178,6 +205,7 @@ namespace GuideEnricher.tvdb
             // TODO: A few things here.  We should add more intelligence when there is more then 1 match
             // Things like default to (US) or (UK) or what ever is usally the case.  Also, perhaps a global setting that would always take newest series first...
 
+            if (this.IsSeriesIgnored(seriesName)) return 0;
             if (this.seriesIDMapping.ContainsKey(seriesName))
             {
                 var seriesid = this.seriesIDMapping[seriesName];
@@ -190,8 +218,6 @@ namespace GuideEnricher.tvdb
                 log.DebugFormat("SD-TvDb: Series cache hit: {0} has id: {1}", seriesName, seriesCache[seriesName]);
                 return seriesCache[seriesName];
             }
-
-            ThrowIfSeriesIgnored(seriesName);
 
             string searchSeries = seriesName;
 
@@ -209,6 +235,10 @@ namespace GuideEnricher.tvdb
                         if (seriesNameRegex[regexEntry].StartsWith("replace="))
                         {
                             searchSeries = regex.Replace(seriesName, seriesNameRegex[regexEntry].Substring(8));
+                        }
+                        else if (seriesNameRegex[regexEntry].StartsWith("id="))
+                        {
+                            return int.Parse(seriesNameRegex[regexEntry].Substring(3));
                         }
                         else
                         {
@@ -246,18 +276,19 @@ namespace GuideEnricher.tvdb
             return 0;
         }
 
-        private void ThrowIfSeriesIgnored(string seriesName)
+        private bool IsSeriesIgnored(string seriesName)
         {
             if (this.seriesIgnore == null)
             {
-                return;
+                return false;
             }
 
             if (this.seriesIgnore.Contains(seriesName))
             {
                 this.log.DebugFormat("{0}: Series {1} is ignored", MODULE, seriesName);
-                throw new SeriesIgnoredException();
+                return true;
             }
+            return false;
         }
 
         private bool IsSeriesInMappedSeries(string seriesName)

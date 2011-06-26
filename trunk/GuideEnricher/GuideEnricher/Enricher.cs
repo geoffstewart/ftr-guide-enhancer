@@ -1,23 +1,20 @@
 ﻿namespace GuideEnricher
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
     using ForTheRecord.Entities;
     using ForTheRecord.ServiceContracts;
     using GuideEnricher.Config;
     using GuideEnricher.EpisodeMatchMethods;
-    using GuideEnricher.Exceptions;
     using GuideEnricher.Model;
     using GuideEnricher.tvdb;
     using log4net;
-    using System.Linq;
-
+    using TvdbLib.Data;
     public class Enricher
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly List<GuideEnricherProgram> enrichedPrograms;
+        private readonly List<GuideEnricherEntities> enrichedPrograms;
         private readonly ITvSchedulerService tvSchedulerService;
         private readonly ITvGuideService tvGuideService;
         private readonly IConfiguration config;
@@ -30,7 +27,7 @@
         public Enricher(IConfiguration configuration, ILogService ftrLogService, ITvGuideService tvGuideService, ITvSchedulerService tvSchedulerService)
         {
             this.config = configuration;
-            this.enrichedPrograms = new List<GuideEnricherProgram>();
+            this.enrichedPrograms = new List<GuideEnricherEntities>();
             this.ftrlogAgent = ftrLogService;
             this.tvGuideService = tvGuideService;
             this.tvSchedulerService = tvSchedulerService;
@@ -39,28 +36,27 @@
 
         public void EnrichUpcomingPrograms(ScheduleType scheduleType)
         {
+            bool updateMatchedEpisodes = bool.Parse(config.getProperty("updateAll"));
+            bool updateSubtitles = bool.Parse(config.getProperty("updateSubtitles"));
             using (this.tvdbLibAccess = new TvdbLibAccess(this.config, this.matchMethods))
             {
-                foreach (var scheduleSummary in this.tvSchedulerService.GetAllSchedules(ChannelType.Television, scheduleType, true))
+                UpcomingGuideProgram[] programs = this.tvSchedulerService.GetUpcomingGuidePrograms(scheduleType, true);
+                var seriesToEnrich = new Dictionary<string, GuideEnricherSeries>();
+
+                foreach (UpcomingGuideProgram program in programs)
                 {
-                    try
+                    var guideProgram = new GuideEnricherEntities(this.tvGuideService.GetProgramById(program.GuideProgramId));
+                    if (!seriesToEnrich.ContainsKey(guideProgram.Title))
                     {
-                        if (scheduleSummary.IsActive)
-                        {
-                            log.DebugFormat("Enriching {0}", scheduleSummary.Name);
-                            var schedule = this.tvSchedulerService.GetScheduleById(scheduleSummary.ScheduleId);
-                            var umatchedEpisodes = this.EnrichProgramsInSchedule(schedule, false);
-                            if (umatchedEpisodes)
-                            {
-                                // Force a refresh on the series and try again...
-                                this.EnrichProgramsInSchedule(schedule, true);
-                            }
-                        }
+                        seriesToEnrich.Add(guideProgram.Title, new GuideEnricherSeries(guideProgram.Title, updateMatchedEpisodes, updateSubtitles));
                     }
-                    catch (NoSeriesMatchException)
-                    {
-                        this.ftrlogAgent.LogMessage(MODULE, LogSeverity.Error, string.Format("Cannot find the correct series for schedule '{0}', consider editing the application config with the correct id using \"id=xxxxx\"", scheduleSummary.Name));
-                    }
+
+                    seriesToEnrich[guideProgram.Title].AddProgram(guideProgram);
+                }
+
+                foreach (var series in seriesToEnrich.Values)
+                {
+                    this.EnrichSeries(series);
                 }
 
                 if (this.enrichedPrograms.Count > 0)
@@ -81,70 +77,63 @@
             }
         }
 
-        private bool EnrichProgramsInSchedule(Schedule schedule, bool forceRefresh)
+        private void EnrichSeries(GuideEnricherSeries series)
         {
-            bool unmatchedEpisodes = true;
-
-            var upcomingPrograms = this.tvSchedulerService.GetUpcomingPrograms(schedule, true);
-
-            if (upcomingPrograms.Length == 0)
+            series.TvDbSeriesID = tvdbLibAccess.getSeriesId(series.Title);
+            if (series.TvDbSeriesID == 0)
             {
-                log.InfoFormat("Schedule '{0}' has no upcoming programs", schedule.Name);
-                
-                // return false to avoid unnecessary refresh
-                return false;
+                series.isIgnored = true;
             }
 
-            foreach (var upcomingProgram in upcomingPrograms)
+            if (series.isIgnored)
             {
-                var guideProgram = new GuideEnricherProgram(this.tvGuideService.GetProgramById((Guid)upcomingProgram.GuideProgramId));
-                if ((!guideProgram.Matched || bool.Parse(this.config.getProperty("updateAll"))) && !guideProgram.Ignore)
+                series.IgnoredPrograms.AddRange(series.PendingPrograms);
+                series.PendingPrograms.Clear();
+            }
+
+            if (series.PendingPrograms.Count > 0)
+            {
+                log.DebugFormat("Beginning enrichment of episodes for series {0}", series.Title);
+                var onlineSeries = tvdbLibAccess.GetTvdbSeries(series.TvDbSeriesID, false);
+                EnrichProgramsInSeries(series, onlineSeries);
+                if (series.FailedPrograms.Count > 0)
                 {
-                    var programWithSameSubTitle = this.enrichedPrograms.Where(x => x.Title == guideProgram.Title && x.SubTitle == guideProgram.SubTitle).FirstOrDefault();
-                    if (programWithSameSubTitle != null)
+                    log.DebugFormat("The first run for the series {0} had unmatched episodes.  Checking for online updates.", series.Title);
+
+                    List<string> currentTvDbEpisodes = new List<string>();
+                    onlineSeries.Episodes.ForEach(x => currentTvDbEpisodes.Add(x.EpisodeName));
+
+                    TvdbSeries UpdatedOnlineSeries = tvdbLibAccess.GetTvdbSeries(series.TvDbSeriesID, true);
+                    if (UpdatedOnlineSeries.Episodes.FindAll(x => !currentTvDbEpisodes.Contains(x.EpisodeName)).Count > 0)
                     {
-                        guideProgram.EpisodeNumberDisplay = programWithSameSubTitle.EpisodeNumberDisplay;
-                        guideProgram.SeriesNumber = programWithSameSubTitle.SeriesNumber;
-                        guideProgram.EpisodeNumber = programWithSameSubTitle.EpisodeNumber;
-
-                        if (bool.Parse(config.getProperty("updateSubtitles")))
-                        {
-                            guideProgram.SubTitle = programWithSameSubTitle.SubTitle;
-                        }
-
-                        guideProgram.Matched = true;
-                        this.enrichedPrograms.Add(guideProgram);
+                        log.DebugFormat("New episodes were found.  Trying enrichment again.");
+                        series.TvDbInformationRefreshed();
+                        EnrichProgramsInSeries(series, UpdatedOnlineSeries);
                     }
-                    else
-                    {
-                        var programWithSameTitle = this.enrichedPrograms.Where(x => x.Title == guideProgram.Title).FirstOrDefault();
-                        if (programWithSameTitle != null)
-                        {
-                            guideProgram.TheTVDBSeriesID = programWithSameTitle.TheTVDBSeriesID;
-                        }
+                }
 
-                        this.tvdbLibAccess.EnrichProgram(guideProgram, forceRefresh);
-                        
-                        if (guideProgram.Matched)
-                        {
-                            this.enrichedPrograms.Add(guideProgram);
-                        }
-                        else
-                        {
-                            guideProgram.Ignore = true;
-                        }
-                    }
-                    
-                    // Force a refresh only once
-                    forceRefresh = false;
+                enrichedPrograms.AddRange(series.SuccessfulPrograms);
+            }
+        }
+
+        private void EnrichProgramsInSeries(GuideEnricherSeries series, TvdbSeries OnlineSeries)
+        {
+            tvdbLibAccess.DebugEpisodeDump(OnlineSeries);
+            do
+            {
+                GuideEnricherEntities guideProgram = series.PendingPrograms[0];
+                tvdbLibAccess.EnrichProgram(guideProgram, OnlineSeries);
+                if (guideProgram.Matched)
+                {
+                    series.AddAllToEnrichedPrograms(guideProgram);
                 }
                 else
                 {
-                    unmatchedEpisodes = false;
+                    series.AddAllToFailedPrograms(guideProgram);
                 }
-            }
-
-            return unmatchedEpisodes;
+            } 
+            while (series.PendingPrograms.Count > 0);
+            
         }
 
         private void UpdateFTRGuideData()

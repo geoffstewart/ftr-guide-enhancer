@@ -106,7 +106,7 @@
     <Compile Include="Config\MatchMethodElement.cs" />
     <Compile Include="Config\MatchMethodCollection.cs" />
     <Compile Include="Config\MatchMethodsSection.cs" />
-    <Compile Include="Model\GuideEnricherProgram.cs" />
+    <Compile Include="Model\GuideEnricherEntities.cs" />
     <Compile Include="EpisodeMatchMethodLoader.cs" />
     <Compile Include="EpisodeMatchMethods\AbsoluteEpisodeNumberMatchMethod.cs" />
     <Compile Include="EpisodeMatchMethods\MatchMethodBase.cs" />
@@ -121,6 +121,7 @@
     </Compile>
     <Compile Include="EpisodeMatchMethods\EpisodeTitleMatchMethod.cs" />
     <Compile Include="EpisodeMatchMethods\IEpisodeMatchMethod.cs" />
+    <Compile Include="Model\GuideEnricherSeries.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProjectInstaller.cs">
       <SubType>Component</SubType>
