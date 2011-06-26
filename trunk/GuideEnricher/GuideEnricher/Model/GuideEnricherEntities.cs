@@ -50,7 +50,6 @@ namespace GuideEnricher.Model
             return string.Format("{0}-{1}", this.Title, this.SubTitle);
         }
 
-        #region GuideProgram members
         public string CreateProgramTitle()
         {
             return this.guideProgram.CreateProgramTitle();
@@ -104,6 +103,12 @@ namespace GuideEnricher.Model
         {
             get { return this.guideProgram.StopTime; }
             set { this.guideProgram.StopTime = value; }
+        }
+
+        public DateTime? PreviouslyAiredTime
+        {
+            get { return this.guideProgram.PreviouslyAiredTime; }
+            set { this.guideProgram.PreviouslyAiredTime = value; }
         }
 
         public string SubTitle
@@ -224,6 +229,5 @@ namespace GuideEnricher.Model
             get { return this.guideProgram.Version; }
             set { this.guideProgram.Version = value; }
         }
-        #endregion GuideProgram members
     }
 }
