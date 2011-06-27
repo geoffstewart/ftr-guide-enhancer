@@ -1,27 +1,29 @@
-﻿/*
- * Created by SharpDevelop.
- * User: geoff
- * Date: 28/09/2010
- * Time: 9:12 PM
- * 
- */
-
-namespace GuideEnricher
+﻿namespace GuideEnricher
 {
-    using System.ServiceProcess;
+    using System.Reflection;
+    using log4net;
+    using Topshelf;
 
     public static class Program
     {
-        /// <summary>
-        /// This method starts the service.
-        /// </summary>
-        public static void Main()
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        public static void Main(string[] args)
         {
-            // This should be the production code, starts the service...
-            ServiceBase.Run(new ServiceBase[] { new GuideEnricherService(Config.Config.GetInstance()) });
-            
-            // Use the following when debuging from VS
-            //new GuideEnricherService(Config.Config.GetInstance()).Start();
-        }             
+            HostFactory.Run(x =>
+                {
+                    x.Service<Service>(s =>
+                                            {
+                                                s.SetServiceName("Guide Enricher");
+                                                s.ConstructUsing(name => new Service());
+                                                s.WhenStarted(service => service.Start());
+                                                s.WhenStopped(service => service.Stop());
+                                            });
+                    x.RunAsLocalSystem();
+                    x.SetDescription("Fetches season and episode information from TheTVDB for For The Record's guide");
+                    x.SetDisplayName("Guide Enricher");
+                    x.SetServiceName("GuideEnricher");
+                });
+        }
     }
 }

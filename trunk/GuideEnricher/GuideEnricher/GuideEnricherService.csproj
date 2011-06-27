@@ -102,6 +102,9 @@
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="Topshelf">
+      <HintPath>..\References\Topshelf\Topshelf.dll</HintPath>
+    </Reference>
     <Reference Include="TvdbLib">
       <HintPath>..\References\TvdbLib.dll</HintPath>
     </Reference>
@@ -122,22 +125,16 @@
     <Compile Include="Enricher.cs" />
     <Compile Include="Config\IConfiguration.cs" />
     <Compile Include="ForTheRecordListener.cs" />
-    <Compile Include="GuideEnricherService.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="EpisodeMatchMethods\EpisodeTitleMatchMethod.cs" />
     <Compile Include="EpisodeMatchMethods\IEpisodeMatchMethod.cs" />
     <Compile Include="Model\GuideEnricherSeries.cs" />
     <Compile Include="Model\GuideProgramEqualityComparer.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="ProjectInstaller.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Config\SeriesNameMap.cs" />
     <Compile Include="Config\SeriesNameMapCollection.cs" />
     <Compile Include="Config\SeriesNameMapsSection.cs" />
-    <Compile Include="test\TestForTheRecordListener.cs" />
+    <Compile Include="Service.cs" />
     <Compile Include="exception\NoSeriesMatchException.cs" />
     <Compile Include="exception\SeriesIgnoredException.cs" />
     <Compile Include="tvdb\TvdbLibAccess.cs" />

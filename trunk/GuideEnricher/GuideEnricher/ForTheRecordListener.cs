@@ -35,31 +35,37 @@ namespace GuideEnricher
         public override void NewGuideData()
         {
             log.DebugFormat("{0}: Handle NewGuideData event", MODULE);
-            signalOtherThread();
+            this.SignalOtherThread();
         }
 
         public override void UpcomingRecordingsChanged()
         {
             log.DebugFormat("{0}: Handle UpcomingRecordingsChanged event", MODULE);
-            signalOtherThread();
+            this.SignalOtherThread();
         }
 
         public override void UpcomingSuggestionsChanged()
         {
             log.DebugFormat("{0}: Handle UpcomingSuggestionsChanged event", MODULE);
-            signalOtherThread();
+            this.SignalOtherThread();
         }
 
         public override void ScheduleChanged(Guid scheduleId)
         {
             log.DebugFormat("{0}: Handle ScheduleChanged event", MODULE);
-            signalOtherThread();
+            this.SignalOtherThread();
         }
 
-        private void signalOtherThread()
+        private void SignalOtherThread()
         {
-            log.DebugFormat("{0}: signal worker thread", MODULE);
-            GuideEnricherService.waitHandle.Set();
+            if (Service.BusyEnriching)
+            {
+                log.Debug("GE is already enriching, skipping event");
+            }
+            else
+            {
+                Service.Enrich(null, null);
+            }
         }
     }
 }
