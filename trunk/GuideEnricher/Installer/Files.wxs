@@ -31,7 +31,7 @@
                   <File Id="ftrdllservicecontracts" Name="ForTheRecord.ServiceContracts.dll" Source="..\GuideEnricher\bin\Release\ForTheRecord.ServiceContracts.dll"/>
                </Component>
               <Component Id="topshelf" Guid="40B2A181-F42F-46EB-997C-8EF890E7B89D" KeyPath="yes">
-                <File Id="topshelf" Name="Topshelf.dll" Source="..\GuideEnricher\bin\Release\Topshelf.dll"/>
+                <File Id="topshelf" Name="Topshelf.dll" Source="..\References\Topshelf\Topshelf.dll"/>
               </Component>
               <Component Id="log4net" Guid="1E687561-415B-4A91-82C9-D4BC9D440278" KeyPath="yes">
                 <File Id="log4netdll" Name="log4net.dll" Source="..\GuideEnricher\bin\Release\log4net.dll"/>
