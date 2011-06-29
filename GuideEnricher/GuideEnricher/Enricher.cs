@@ -11,7 +11,8 @@
     using GuideEnricher.tvdb;
     using log4net;
     using TvdbLib.Data;
-    
+    using System.Linq;
+
     public class Enricher
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -38,8 +39,8 @@
             this.tvdbLibAccess = tvdbLibAccess;
             this.matchMethods = matchMethods;
             this.seriesToEnrich = new Dictionary<string, GuideEnricherSeries>();
-            updateMatchedEpisodes = bool.Parse(this.config.getProperty("updateAll"));
-            updateSubtitlesParameter = bool.Parse(this.config.getProperty("updateSubtitles"));
+            this.updateMatchedEpisodes = bool.Parse(this.config.getProperty("updateAll"));
+            this.updateSubtitlesParameter = bool.Parse(this.config.getProperty("updateSubtitles"));
         }
 
         public void EnrichUpcomingPrograms()
@@ -73,11 +74,11 @@
         {
             var programs = this.tvSchedulerService.GetAllUpcomingPrograms(scheduleType, true);
 
-            foreach (var program in programs)
+            foreach (var program in programs.Where(p => p.Channel.ChannelType == ChannelType.Television))
             {
                 if (!program.GuideProgramId.HasValue)
                 {
-                    log.DebugFormat("[{0}] {1} - {2:MM/dd hh:mm tt} does not have a guide program entry", program.Title, program.StartTime);
+                    log.DebugFormat("[{0}] - {1:MM/dd hh:mm tt} does not have a guide program entry", program.Title, program.StartTime);
                     break;
                 }
 
@@ -93,7 +94,7 @@
 
         public void EnrichSeries(GuideEnricherSeries series)
         {
-            series.TvDbSeriesID = tvdbLibAccess.getSeriesId(series.Title);
+            series.TvDbSeriesID = this.tvdbLibAccess.getSeriesId(series.Title);
             if (series.TvDbSeriesID == 0)
             {
                 series.isIgnored = true;
@@ -108,8 +109,8 @@
             if (series.PendingPrograms.Count > 0)
             {
                 log.DebugFormat("Beginning enrichment of episodes for series {0}", series.Title);
-                var onlineSeries = tvdbLibAccess.GetTvdbSeries(series.TvDbSeriesID, false);
-                EnrichProgramsInSeries(series, onlineSeries);
+                var onlineSeries = this.tvdbLibAccess.GetTvdbSeries(series.TvDbSeriesID, false);
+                this.EnrichProgramsInSeries(series, onlineSeries);
                 if (series.FailedPrograms.Count > 0)
                 {
                     log.DebugFormat("The first run for the series {0} had unmatched episodes.  Checking for online updates.", series.Title);
@@ -117,26 +118,26 @@
                     List<string> currentTvDbEpisodes = new List<string>();
                     onlineSeries.Episodes.ForEach(x => currentTvDbEpisodes.Add(x.EpisodeName));
 
-                    TvdbSeries UpdatedOnlineSeries = tvdbLibAccess.GetTvdbSeries(series.TvDbSeriesID, true);
-                    if (UpdatedOnlineSeries.Episodes.FindAll(x => !currentTvDbEpisodes.Contains(x.EpisodeName)).Count > 0)
+                    TvdbSeries updatedOnlineSeries = this.tvdbLibAccess.GetTvdbSeries(series.TvDbSeriesID, true);
+                    if (updatedOnlineSeries.Episodes.FindAll(x => !currentTvDbEpisodes.Contains(x.EpisodeName)).Count > 0)
                     {
                         log.DebugFormat("New episodes were found.  Trying enrichment again.");
                         series.TvDbInformationRefreshed();
-                        EnrichProgramsInSeries(series, UpdatedOnlineSeries);
+                        this.EnrichProgramsInSeries(series, updatedOnlineSeries);
                     }
                 }
 
-                enrichedPrograms.AddRange(series.SuccessfulPrograms);
+                this.enrichedPrograms.AddRange(series.SuccessfulPrograms);
             }
         }
 
         private void EnrichProgramsInSeries(GuideEnricherSeries series, TvdbSeries OnlineSeries)
         {
-            tvdbLibAccess.DebugEpisodeDump(OnlineSeries);
+            this.tvdbLibAccess.DebugEpisodeDump(OnlineSeries);
             do
             {
                 GuideEnricherEntities guideProgram = series.PendingPrograms[0];
-                tvdbLibAccess.EnrichProgram(guideProgram, OnlineSeries);
+                this.tvdbLibAccess.EnrichProgram(guideProgram, OnlineSeries);
                 if (guideProgram.Matched)
                 {
                     series.AddAllToEnrichedPrograms(guideProgram);

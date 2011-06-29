@@ -3,7 +3,6 @@ namespace GuideEnricher
     using System;
     using System.Reflection;
     using System.ServiceModel;
-    using System.Threading;
     using System.Timers;
     using ForTheRecord.Entities;
     using ForTheRecord.ServiceAgents;
@@ -38,7 +37,7 @@ namespace GuideEnricher
                 {
                     waitTime = 12;
                 }
-                enrichTimer = new Timer(TimeSpan.FromHours(waitTime).TotalMilliseconds) { AutoReset = false };
+                enrichTimer = new Timer(TimeSpan.FromSeconds(15).TotalMilliseconds) { AutoReset = false };
                 enrichTimer.Elapsed += Enrich;
                 enrichTimer.Start();
             }
