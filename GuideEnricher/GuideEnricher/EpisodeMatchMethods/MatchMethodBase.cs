@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Reflection;
+    using System.Text.RegularExpressions;
     using GuideEnricher.Config;
     using GuideEnricher.Model;
     using log4net;
@@ -31,6 +32,12 @@
             if (bool.Parse(Config.GetInstance().getProperty("updateSubtitles")))
             {
                 guideProgram.SubTitle = episode.EpisodeName;
+            }
+
+            if (bool.Parse(Config.GetInstance().getProperty("episodeInDescription")))
+            {
+                var descriptionWithNoEpisodeNumber = Regex.Replace(guideProgram.Description, "^S[0-9][0-9]E[0-9][0-9] - ", string.Empty);
+                guideProgram.Description = string.Format("{0} - {1}", guideProgram.EpisodeNumberDisplay, descriptionWithNoEpisodeNumber);
             }
 
             this.log.DebugFormat("[{0}] Correctly matched {1} - {2} as {3}", this.MethodName, guideProgram.Title, guideProgram.SubTitle, guideProgram.EpisodeNumberDisplay);
