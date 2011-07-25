@@ -34,7 +34,7 @@ namespace GuideEnricher.Tests
             programB.Title = "Intervention";
             programB.SubTitle = "Sarah; Mikeal";
 
-            var series = new GuideEnricherSeries("Intervention", false, false);
+            var series = new GuideEnricherSeries("Intervention", false, false, false);
             series.AddProgram(new GuideEnricherEntities(programA));
             series.AddProgram(new GuideEnricherEntities(programB));
 

@@ -26,6 +26,7 @@
         private readonly Dictionary<string, GuideEnricherSeries> seriesToEnrich;
         private bool updateMatchedEpisodes;
         private bool updateSubtitlesParameter;
+        private bool updateDescription;
 
         private const string MODULE = "GuideEnricher";
 
@@ -41,6 +42,7 @@
             this.seriesToEnrich = new Dictionary<string, GuideEnricherSeries>();
             this.updateMatchedEpisodes = bool.Parse(this.config.getProperty("updateAll"));
             this.updateSubtitlesParameter = bool.Parse(this.config.getProperty("updateSubtitles"));
+            this.updateDescription = bool.Parse(this.config.getProperty("episodeInDescription"));
         }
 
         public void EnrichUpcomingPrograms()
@@ -85,7 +87,7 @@
                 var guideProgram = new GuideEnricherEntities(this.tvGuideService.GetProgramById(program.GuideProgramId.Value));
                 if (!this.seriesToEnrich.ContainsKey(guideProgram.Title))
                 {
-                    this.seriesToEnrich.Add(guideProgram.Title, new GuideEnricherSeries(guideProgram.Title, this.updateMatchedEpisodes, this.updateSubtitlesParameter));
+                    this.seriesToEnrich.Add(guideProgram.Title, new GuideEnricherSeries(guideProgram.Title, this.updateMatchedEpisodes, this.updateSubtitlesParameter, this.updateDescription));
                 }
 
                 this.seriesToEnrich[guideProgram.Title].AddProgram(guideProgram);

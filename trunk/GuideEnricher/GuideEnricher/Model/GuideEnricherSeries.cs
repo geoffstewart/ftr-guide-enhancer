@@ -8,13 +8,16 @@
     {
         private readonly bool updateAll;
         private readonly bool updateSubtitles;
+        private readonly bool updateDescription;
+
         private static readonly GuideProgramEqualityComparer guideProgramEqualityComparer = new GuideProgramEqualityComparer();
 
-        public GuideEnricherSeries(String title, bool updateAllParameter, bool updateSubtitlesParameter)
+        public GuideEnricherSeries(String title, bool updateAllParameter, bool updateSubtitlesParameter, bool updateDescription)
         {
             this.Title = title;
             this.updateAll = updateAllParameter;
             this.updateSubtitles = updateSubtitlesParameter;
+            this.updateDescription = updateDescription;
 
             this.PendingPrograms = new List<GuideEnricherEntities>();
             this.SuccessfulPrograms = new List<GuideEnricherEntities>();
@@ -73,6 +76,11 @@
                     if (this.updateSubtitles)
                     {
                         similarProgram.SubTitle = program.SubTitle;
+                    }
+
+                    if (this.updateDescription)
+                    {
+                        similarProgram.Description = program.Description;
                     }
                 }
 
