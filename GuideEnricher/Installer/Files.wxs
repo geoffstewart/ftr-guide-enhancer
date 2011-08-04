@@ -8,17 +8,10 @@
                   <File Id="LicenseFile" Name="license.rtf" Source="license.rtf"/>
                </Component>
                <Component Id="ServiceExe" Guid="BB06A3CF-236E-4612-B23D-671210C4270D">
-                 
                   <File Id="ServiceExe" Name="GuideEnricherService.exe" Source="..\GuideEnricher\bin\Release\GuideEnricherService.exe" KeyPath="yes"/>
-                  <ServiceControl Id="ServiceExeStart" 
-                                  Name="GuideEnricher"
-                                  Stop="both" 
-                                  Remove="uninstall" 
-                                  Wait="yes" />
-               
+                  <File Id="ServiceExeConfig" Name="GuideEnricherService.exe.config" Source="..\GuideEnricher\bin\Release\GuideEnricherService.exe.config" CompanionFile="ServiceExe" />
                </Component>
-               <Component Id="ServiceExeConfig" Guid="8A85871A-BAA0-424F-bFAA-D1CB576D8F74" KeyPath="yes" Permanent="yes">
-                  <File Id="ServiceExeConfig" Name="GuideEnricherService.exe.config" Source="..\GuideEnricher\bin\Release\GuideEnricherService.exe.config"/>
+               <Component Id="ServiceExeConfig" Guid="8A85871A-BAA0-424F-bFAA-D1CB576D8F74" KeyPath="yes" Permanent="yes" NeverOverwrite="no">
                </Component>
                <Component Id="Tvdblibdll" Guid="0A2F94ED-4D4E-4E3B-82BE-4B936C96F6F7" KeyPath="yes">
                   <File Id="Tvdblibdll" Name="TvdbLib.dll" Source="..\GuideEnricher\bin\Release\TvdbLib.dll"/>

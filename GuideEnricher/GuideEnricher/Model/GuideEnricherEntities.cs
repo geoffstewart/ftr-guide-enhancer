@@ -105,12 +105,6 @@ namespace GuideEnricher.Model
             set { this.guideProgram.StopTime = value; }
         }
 
-        public DateTime? PreviouslyAiredTime
-        {
-            get { return this.guideProgram.PreviouslyAiredTime; }
-            set { this.guideProgram.PreviouslyAiredTime = value; }
-        }
-
         public string SubTitle
         {
             get { return this.guideProgram.SubTitle; }
