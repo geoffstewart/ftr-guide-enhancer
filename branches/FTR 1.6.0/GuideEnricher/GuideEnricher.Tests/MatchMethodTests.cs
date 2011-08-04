@@ -28,7 +28,6 @@ namespace GuideEnricher.Tests
             var programA = new GuideProgram();
             programA.Title = "Intervention";
             programA.SubTitle = "Sarah; Mikeal";
-            programA.PreviouslyAiredTime = new DateTime(2011, 6, 27);
 
             var programB = new GuideProgram();
             programB.Title = "Intervention";
