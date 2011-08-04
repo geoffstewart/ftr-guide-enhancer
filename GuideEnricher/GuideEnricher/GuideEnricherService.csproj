@@ -114,7 +114,6 @@
     <Compile Include="Config\MatchMethodElement.cs" />
     <Compile Include="Config\MatchMethodCollection.cs" />
     <Compile Include="Config\MatchMethodsSection.cs" />
-    <Compile Include="EpisodeMatchMethods\AirDateMatchMethod.cs" />
     <Compile Include="Model\GuideEnricherEntities.cs" />
     <Compile Include="EpisodeMatchMethodLoader.cs" />
     <Compile Include="EpisodeMatchMethods\AbsoluteEpisodeNumberMatchMethod.cs" />
