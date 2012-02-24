@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("GuideEnricher.Tests")]
+[assembly: AssemblyTitle("GuideEnricher Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("AAFC-AAC")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("GuideEnricher.Tests")]
-[assembly: AssemblyCopyright("Copyright © AAFC-AAC 2011")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
