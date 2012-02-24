@@ -143,14 +143,10 @@ namespace GuideEnricher.tvdb
                 if (regex.StartsWith("regex="))
                 {
                     this.seriesNameRegex.Add(regex.Substring(6), this.seriesNameMapping[regex]);
-                    this.seriesNameMapping.Remove(regex);
-                    break;
                 }
-                if (this.seriesNameMapping[regex].StartsWith("id="))
+                else if (this.seriesNameMapping[regex].StartsWith("id="))
                 {
                     this.seriesIDMapping.Add(regex, int.Parse(this.seriesNameMapping[regex].Substring(3)));
-                    this.seriesNameMapping.Remove(regex);
-                    break;
                 }                
             }
         }

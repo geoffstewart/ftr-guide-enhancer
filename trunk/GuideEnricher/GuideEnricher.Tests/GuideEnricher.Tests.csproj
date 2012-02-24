@@ -132,6 +132,7 @@
   <ItemGroup>
     <None Include="..\GuideEnricher\app.config">
       <Link>app.config</Link>
+      <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
