@@ -18,8 +18,9 @@ namespace GuideEnricher.Tests
         {
             var methods = EpisodeMatchMethodLoader.GetMatchMethods();
             Assert.IsInstanceOf(typeof(EpisodeTitleMatchMethod), methods[0]);
-            Assert.IsInstanceOf(typeof(NoPunctuationMatchMethod), methods[1]);
-            Assert.IsInstanceOf(typeof(RemoveCommonWordsMatchMethod), methods[2]);
+            Assert.IsInstanceOf(typeof(AirDateMatchMethod), methods[1]);
+            Assert.IsInstanceOf(typeof(NoPunctuationMatchMethod), methods[2]);
+            Assert.IsInstanceOf(typeof(RemoveCommonWordsMatchMethod), methods[3]);
         }
 
         [Test]
@@ -29,10 +30,12 @@ namespace GuideEnricher.Tests
             programA.Title = "Intervention";
             programA.SubTitle = "Sarah; Mikeal";
             programA.PreviouslyAiredTime = new DateTime(2011, 6, 27);
+            programA.GuideProgramId = Guid.NewGuid();
 
             var programB = new GuideProgram();
             programB.Title = "Intervention";
             programB.SubTitle = "Sarah; Mikeal";
+            programB.GuideProgramId = Guid.NewGuid();
 
             var series = new GuideEnricherSeries("Intervention", false, false, false);
             series.AddProgram(new GuideEnricherEntities(programA));
