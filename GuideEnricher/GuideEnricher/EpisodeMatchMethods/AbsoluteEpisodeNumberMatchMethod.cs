@@ -18,24 +18,13 @@ namespace GuideEnricher.EpisodeMatchMethods
 
         public override bool Match(GuideEnricherEntities guideProgram, List<TvdbEpisode> episodes)
         {
-            int episodeNumber;
-            if (!guideProgram.EpisodeNumber.HasValue)
+            var episodeNumber = guideProgram.GetValidEpisodeNumber();
+            if (episodeNumber == 0)
             {
-                if (int.TryParse(guideProgram.SubTitle, out episodeNumber))
-                {
-                    this.log.DebugFormat("{0}-{1} subtitle is a number, will use it to try to match as absolute episode number", guideProgram.Title, guideProgram.SubTitle);
-                }
-                else
-                {
-                    this.log.DebugFormat("Cannot use match method [{0}] {1} does not have an episode number", this.MethodName, guideProgram.Title);
-                    return false;
-                }
+                this.log.DebugFormat("Cannot use match method [{0}] {1} does not have an episode number", this.MethodName, guideProgram.Title);
+                return false;
             }
-            else
-            {
-                episodeNumber = guideProgram.EpisodeNumber.Value;
-            }
-
+            
             this.CalculateAbsoluteNumbers(episodes);
             this.MatchAttempts++;
 

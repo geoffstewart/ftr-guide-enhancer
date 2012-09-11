@@ -230,4 +230,23 @@ namespace GuideEnricher.Model
             set { this.guideProgram.Version = value; }
         }
     }
+
+    public static class GuideEnricherEntitiesExtensionMethods
+    {
+        public static int GetValidEpisodeNumber(this GuideEnricherEntities guideProgram)
+        {
+            int episodeNumber;
+            if (!guideProgram.EpisodeNumber.HasValue)
+            {
+                int.TryParse(guideProgram.SubTitle, out episodeNumber);
+            }
+            else
+            {
+                episodeNumber = guideProgram.EpisodeNumber.Value;
+            }
+
+            return episodeNumber;
+        }
+
+    }
 }

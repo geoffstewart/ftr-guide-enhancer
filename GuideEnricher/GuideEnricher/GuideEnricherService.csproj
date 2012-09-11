@@ -60,10 +60,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\FTR\ForTheRecord.Client.Common.dll</HintPath>
     </Reference>
-    <Reference Include="ForTheRecord.Common, Version=1.6.0.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\FTR\ForTheRecord.Common.dll</HintPath>
-    </Reference>
     <Reference Include="ForTheRecord.Entities, Version=1.6.0.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\FTR\ForTheRecord.Entities.dll</HintPath>
@@ -115,6 +111,7 @@
     <Compile Include="Config\MatchMethodCollection.cs" />
     <Compile Include="Config\MatchMethodsSection.cs" />
     <Compile Include="EpisodeMatchMethods\AirDateMatchMethod.cs" />
+    <Compile Include="EpisodeMatchMethods\ThreeDigitSeasonEpisodeMatchMethod.cs" />
     <Compile Include="Model\GuideEnricherEntities.cs" />
     <Compile Include="EpisodeMatchMethodLoader.cs" />
     <Compile Include="EpisodeMatchMethods\AbsoluteEpisodeNumberMatchMethod.cs" />

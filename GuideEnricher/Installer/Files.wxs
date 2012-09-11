@@ -25,7 +25,6 @@
                </Component>
                <Component Id="ftrfiles" Guid="68699CF2-2A86-4606-B1A6-4C2EF91A6DB1" KeyPath="yes">
                   <File Id="ftrdllclient" Name="ForTheRecord.Client.Common.dll" Source="..\GuideEnricher\bin\Release\ForTheRecord.Client.Common.dll"/>
-                  <File Id="ftrdllcommon" Name="ForTheRecord.Common.dll" Source="..\GuideEnricher\bin\Release\ForTheRecord.Common.dll"/>
                   <File Id="ftrdllentities" Name="ForTheRecord.Entities.dll" Source="..\GuideEnricher\bin\Release\ForTheRecord.Entities.dll"/>
                   <File Id="ftrdllserviceagents" Name="ForTheRecord.ServiceAgents.dll" Source="..\GuideEnricher\bin\Release\ForTheRecord.ServiceAgents.dll"/>
                   <File Id="ftrdllservicecontracts" Name="ForTheRecord.ServiceContracts.dll" Source="..\GuideEnricher\bin\Release\ForTheRecord.ServiceContracts.dll"/>
