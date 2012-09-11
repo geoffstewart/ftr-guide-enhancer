@@ -38,10 +38,11 @@
             this.testPrograms.Add(new TestProgram("Family Guy", "Deep Throats", 74, "S04E23"));
             this.testPrograms.Add(new TestProgram("The Big Bang Theory", "The Zazzy Substitution", 0, "S04E03"));
             this.testPrograms.Add(new TestProgram("Castle", "Pretty Dead (59)", 59, "S03E23"));
+            this.testPrograms.Add(new TestProgram("Shark Tank", "Episode 2", 202, "S02E02"));
         }
 
         [Test]
-        public void TestEnricherWithAbsoluteEpisodeNumber()
+        public void TestEnricherMethods()
         {
             var enricher = new TvdbLibAccess(mockConfig.Object, EpisodeMatchMethodLoader.GetMatchMethods());
             this.CreateTestData();
