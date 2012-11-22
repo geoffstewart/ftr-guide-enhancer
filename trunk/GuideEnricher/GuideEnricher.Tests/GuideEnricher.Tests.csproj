@@ -55,17 +55,11 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ForTheRecord.Entities, Version=1.6.0.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\GuideEnricher\..\References\FTR\ForTheRecord.Entities.dll</HintPath>
+    <Reference Include="ArgusTV.DataContracts">
+      <HintPath>..\References\ArgusTV\ArgusTV.DataContracts.dll</HintPath>
     </Reference>
-    <Reference Include="ForTheRecord.ServiceAgents, Version=1.6.0.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\GuideEnricher\..\References\FTR\ForTheRecord.ServiceAgents.dll</HintPath>
-    </Reference>
-    <Reference Include="ForTheRecord.ServiceContracts, Version=1.6.1.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\GuideEnricher\..\References\FTR\ForTheRecord.ServiceContracts.dll</HintPath>
+    <Reference Include="ArgusTV.ServiceContracts">
+      <HintPath>..\References\ArgusTV\ArgusTV.ServiceContracts.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

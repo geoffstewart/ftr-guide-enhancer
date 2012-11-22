@@ -4,8 +4,8 @@ namespace GuideEnricher
     using System.Reflection;
     using System.ServiceModel;
     using System.Timers;
-    using ForTheRecord.Entities;
-    using ForTheRecord.ServiceAgents;
+    using ArgusTV.DataContracts;
+    using ArgusTV.ServiceAgents;
     using GuideEnricher.Config;
     using GuideEnricher.tvdb;
     using log4net;
@@ -59,7 +59,7 @@ namespace GuideEnricher
             {
                 if (ServiceChannelFactories.IsInitialized)
                 {
-                    using (var agent = new ForTheRecordServiceAgent())
+                    using (var agent = new CoreServiceAgent())
                     {
                         if (agent.Ping(0) > 0)
                         {
@@ -78,9 +78,9 @@ namespace GuideEnricher
                     ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "GuideEnricher successfully connected");
                     log.Info("Successfully connected to ForTheRecordService");
 
-                    using (var agent = new ForTheRecordServiceAgent())
+                    using (var agent = new CoreServiceAgent())
                     {
-                        ForTheRecordEventGroup eventGroupsToListenTo = ForTheRecordEventGroup.ScheduleEvents | ForTheRecordEventGroup.GuideEvents;
+                        EventGroup eventGroupsToListenTo = EventGroup.ScheduleEvents | EventGroup.GuideEvents;
                         agent.EnsureEventListener(eventGroupsToListenTo, config.getProperty("serviceUrl"), Constants.EventListenerApiVersion);
                     }
                 }
@@ -89,7 +89,7 @@ namespace GuideEnricher
                     log.Fatal("Unable to connect to ForTheRecordService, check your settings.  Will try again later");
                 }
             }
-            catch(ForTheRecordNotFoundException notFoundException)
+            catch(ArgusTVNotFoundException notFoundException)
             {
                 log.Error(notFoundException.Message);
             }
@@ -97,7 +97,7 @@ namespace GuideEnricher
             {
                 log.Error("Connection to FTR lost, make sure the FTR service is running");
             }
-            catch(ForTheRecordException ftrException)
+            catch(ArgusTVException ftrException)
             {
                 log.Fatal(ftrException.Message);
             }
@@ -117,15 +117,15 @@ namespace GuideEnricher
                     BusyEnriching = true;
                 }
 
-                using (var agent = new ForTheRecordServiceAgent())
+                using (var agent = new CoreServiceAgent())
                 {
                     log.DebugFormat("Ping {0}", agent.Ping(0));
                 }
 
-                using (var tvGuideServiceAgent = new TvGuideServiceAgent())
+                using (var tvGuideServiceAgent = new GuideServiceAgent())
                 {
                     
-                    using (var tvSchedulerServiceAgent = new TvSchedulerServiceAgent())
+                    using (var tvSchedulerServiceAgent = new SchedulerServiceAgent())
                     {
                         var matchMethods = EpisodeMatchMethodLoader.GetMatchMethods();
                         using (var tvdbLibAccess = new TvdbLibAccess(config, matchMethods))

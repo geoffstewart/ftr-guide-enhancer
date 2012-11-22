@@ -3,8 +3,8 @@
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-    using ForTheRecord.Entities;
-    using ForTheRecord.ServiceContracts;
+    using ArgusTV.DataContracts;
+    using ArgusTV.ServiceContracts;
     using GuideEnricher.Config;
     using GuideEnricher.EpisodeMatchMethods;
     using GuideEnricher.Model;
@@ -17,8 +17,8 @@
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<GuideEnricherEntities> enrichedPrograms;
-        private readonly ITvSchedulerService tvSchedulerService;
-        private readonly ITvGuideService tvGuideService;
+        private readonly ISchedulerService tvSchedulerService;
+        private readonly IGuideService tvGuideService;
         private readonly IConfiguration config;
         private readonly ILogService ftrlogAgent;
         private readonly List<IEpisodeMatchMethod> matchMethods;
@@ -30,7 +30,7 @@
 
         private const string MODULE = "GuideEnricher";
 
-        public Enricher(IConfiguration configuration, ILogService ftrLogService, ITvGuideService tvGuideService, ITvSchedulerService tvSchedulerService, TvdbLibAccess tvdbLibAccess, List<IEpisodeMatchMethod> matchMethods)
+        public Enricher(IConfiguration configuration, ILogService ftrLogService, IGuideService tvGuideService, ISchedulerService tvSchedulerService, TvdbLibAccess tvdbLibAccess, List<IEpisodeMatchMethod> matchMethods)
         {
             this.config = configuration;
             this.enrichedPrograms = new List<GuideEnricherEntities>();

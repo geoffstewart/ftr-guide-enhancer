@@ -11,7 +11,7 @@
     <OutputType>Package</OutputType>
     <RootNamespace>Installer</RootNamespace>
     <OutputName>GuideEnricherInstall</OutputName>
-    <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(ProgramFiles32)\Windows Installer XML v3.5\bin</WixToolPath>
+    <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(ProgramFiles32)\Windows Installer XML v3.6\bin</WixToolPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\wix.targets</WixTargetsPath>
     <WixTasksPath Condition=" '$(WixTasksPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\WixTasks.dll</WixTasksPath>
     <SupressIces>ICE45</SupressIces>
@@ -39,12 +39,6 @@ copy ..\..\..\GuideEnricher\bin\Release\* ..\..\dist;
     <Optimize>True</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <WixExtension Include="WixUIExtension">
-      <HintPath>C:\Program Files (x86)\Windows Installer XML v3.5\bin\WixUIExtension.dll</HintPath>
-      <Name>WixUIExtension</Name>
-    </WixExtension>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Files.wxs" />
     <Compile Include="Setup.wxs" />
   </ItemGroup>
@@ -60,6 +54,12 @@ copy ..\..\..\GuideEnricher\bin\Release\* ..\..\dist;
       <Project>{9D718DA7-3160-4968-8048-361D7C1F3009}</Project>
       <Name>GuideEnricherService</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Windows Installer XML v3.6\bin\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>

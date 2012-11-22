@@ -11,8 +11,10 @@ namespace GuideEnricher
     using System;
     using System.Reflection;
     using System.ServiceModel;
-    using ForTheRecord.Client.Common;
-    using ForTheRecord.ServiceContracts.Events;
+
+    using ArgusTV.Client.Common;
+    using ArgusTV.ServiceContracts.Events;
+
     using log4net;
 
     /// <summary>

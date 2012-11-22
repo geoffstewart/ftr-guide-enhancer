@@ -1,6 +1,6 @@
 namespace GuideEnricher.Tests
 {
-    using ForTheRecord.Entities;
+    using ArgusTV.DataContracts;
     using GuideEnricher.Model;
 
     /// <summary>
