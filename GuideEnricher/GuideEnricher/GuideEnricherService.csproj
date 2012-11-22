@@ -56,21 +56,17 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ForTheRecord.Client.Common, Version=1.6.0.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\FTR\ForTheRecord.Client.Common.dll</HintPath>
+    <Reference Include="ArgusTV.Client.Common">
+      <HintPath>..\References\ArgusTV\ArgusTV.Client.Common.dll</HintPath>
     </Reference>
-    <Reference Include="ForTheRecord.Entities, Version=1.6.0.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\FTR\ForTheRecord.Entities.dll</HintPath>
+    <Reference Include="ArgusTV.DataContracts">
+      <HintPath>..\References\ArgusTV\ArgusTV.DataContracts.dll</HintPath>
     </Reference>
-    <Reference Include="ForTheRecord.ServiceAgents, Version=1.6.0.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\FTR\ForTheRecord.ServiceAgents.dll</HintPath>
+    <Reference Include="ArgusTV.ServiceAgents">
+      <HintPath>..\References\ArgusTV\ArgusTV.ServiceAgents.dll</HintPath>
     </Reference>
-    <Reference Include="ForTheRecord.ServiceContracts, Version=1.6.0.0, Culture=neutral, PublicKeyToken=a9a5dfc20b8d6175, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\FTR\ForTheRecord.ServiceContracts.dll</HintPath>
+    <Reference Include="ArgusTV.ServiceContracts">
+      <HintPath>..\References\ArgusTV\ArgusTV.ServiceContracts.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

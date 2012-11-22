@@ -1,7 +1,7 @@
 namespace GuideEnricher.Model
 {
     using System;
-    using ForTheRecord.Entities;
+    using ArgusTV.DataContracts;
 
     public class GuideEnricherEntities : GuideProgram, IProgramSummary
     {

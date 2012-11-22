@@ -55,8 +55,6 @@ namespace GuideEnricher.EpisodeMatchMethods
                     absoluteNumber++;
                     episode.AbsoluteNumber = absoluteNumber;
                 }
-
-                this.log.DebugFormat("{0}-{1} is absolute number {2}", episode.SeasonNumber, episode.EpisodeNumber, episode.AbsoluteNumber);
             }
         }
     }

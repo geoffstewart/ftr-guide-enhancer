@@ -1,8 +1,9 @@
 namespace GuideEnricher.Tests
 {
     using System;
-    using ForTheRecord.Entities;
-    using ForTheRecord.ServiceContracts;
+    using ArgusTV.DataContracts;
+    using ArgusTV.ServiceContracts;
+
     using GuideEnricher.Config;
     using GuideEnricher.EpisodeMatchMethods;
     using GuideEnricher.Model;
@@ -13,16 +14,6 @@ namespace GuideEnricher.Tests
     [TestFixture]
     public class MatchMethodTests
     {
-        [Test]
-        public void ReturnsMethodsOrderedByPriority()
-        {
-            var methods = EpisodeMatchMethodLoader.GetMatchMethods();
-            Assert.IsInstanceOf(typeof(EpisodeTitleMatchMethod), methods[0]);
-            Assert.IsInstanceOf(typeof(AirDateMatchMethod), methods[1]);
-            Assert.IsInstanceOf(typeof(NoPunctuationMatchMethod), methods[2]);
-            Assert.IsInstanceOf(typeof(RemoveCommonWordsMatchMethod), methods[3]);
-        }
-
         [Test]
         public void ShouldUpdateSimilarPrograms()
         {
@@ -44,7 +35,7 @@ namespace GuideEnricher.Tests
             var config = Config.GetInstance();
             var matchMethods = EpisodeMatchMethodLoader.GetMatchMethods();
             var tvdbLibAccess = new TvdbLibAccess(config, matchMethods);
-            var enricher = new Enricher(config, new Mock<ILogService>().Object, new Mock<ITvGuideService>().Object, new Mock<ITvSchedulerService>().Object, tvdbLibAccess, matchMethods);
+            var enricher = new Enricher(config, new Mock<ILogService>().Object, new Mock<IGuideService>().Object, new Mock<ISchedulerService>().Object, tvdbLibAccess, matchMethods);
             enricher.EnrichSeries(series);
 
             Assert.AreEqual(11, programA.SeriesNumber);
