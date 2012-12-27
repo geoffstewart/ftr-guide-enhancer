@@ -4,6 +4,14 @@
     using log4net;
     using Topshelf;
 
+
+//    http://locahost:49943/ArgusTV/Core/help
+//    http://locahost:49943/ArgusTV/Scheduler/help
+//    http://locahost:49943/ArgusTV/Control/help
+//    http://locahost:49943/ArgusTV/Guide/help
+//    http://locahost:49943/ArgusTV/Configuration/help
+//    http://locahost:49943/ArgusTV/Log/help
+
     public static class Program
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

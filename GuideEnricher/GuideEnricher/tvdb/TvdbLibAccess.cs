@@ -218,7 +218,7 @@ namespace GuideEnricher.tvdb
                 }
             }
 
-            List<TvdbSearchResult> searchResults = tvdbHandler.SearchSeries(searchSeries);
+            List<TvdbSearchResult> searchResults = tvdbHandler.SearchSeries(searchSeries, this.language);
 
             log.DebugFormat("SD-TvDb: Search for {0} return {1} results", searchSeries, searchResults.Count);
             
