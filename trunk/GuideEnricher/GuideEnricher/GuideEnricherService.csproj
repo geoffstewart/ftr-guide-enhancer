@@ -72,6 +72,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\Log4Net\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Nancy">
+      <HintPath>..\packages\Nancy.0.14.1\lib\net40\Nancy.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\References\nunit.framework.dll</HintPath>
     </Reference>
@@ -160,6 +163,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
 </Project>
