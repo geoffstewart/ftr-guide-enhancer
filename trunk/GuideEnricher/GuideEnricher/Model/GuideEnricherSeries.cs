@@ -64,7 +64,7 @@
         {
             SuccessfulPrograms.Add(program);
             PendingPrograms.Remove(program);
-            List<GuideEnricherEntities> similarPrograms = PendingPrograms.FindAll(x => x.SubTitle == program.OriginalSubTitle);
+            var similarPrograms = this.FindSimilarPrograms(this.PendingPrograms.FindAll(x => x.SubTitle == program.OriginalSubTitle), program);
             if (similarPrograms.Count > 0)
             {
                 PendingPrograms = new List<GuideEnricherEntities>(PendingPrograms.Except(similarPrograms));
@@ -86,6 +86,12 @@
 
                 SuccessfulPrograms.AddRange(similarPrograms);
             }
+        }
+
+        public List<GuideEnricherEntities> FindSimilarPrograms(List<GuideEnricherEntities> pendingPrograms, GuideEnricherEntities program)
+        {
+            List<GuideEnricherEntities> similarPrograms = pendingPrograms;
+            return similarPrograms;
         }
 
         public void AddAllToFailedPrograms(GuideEnricherEntities program)

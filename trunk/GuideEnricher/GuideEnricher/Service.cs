@@ -14,8 +14,10 @@ namespace GuideEnricher
     public class Service
     {
         private const string MODULE = "GuideEnricher";
+        private const string TVDBID = "BBB734ABE146900D";  // mine, don't abuse it!!!
+
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly IConfiguration config = Config.Config.GetInstance();
+        private static readonly IConfiguration config = Config.Config.Instance;
         private static LogServiceAgent ftrlogAgent;
         private static Timer ftrConnectionTimer;
         private static Timer enrichTimer;
@@ -70,13 +72,13 @@ namespace GuideEnricher
                     return;
                 }
 
-                log.Debug("Trying to connect to FTR");
+                log.Debug("Trying to connect to Argus TV");
                 ServerSettings serverSettings = this.GetServerSettings();
                 if (ServiceChannelFactories.Initialize(serverSettings, true))
                 {
                     ftrlogAgent = new LogServiceAgent();
                     ftrlogAgent.LogMessage(MODULE, LogSeverity.Information, "GuideEnricher successfully connected");
-                    log.Info("Successfully connected to ForTheRecordService");
+                    log.Info("Successfully connected to Argus TV");
 
                     using (var agent = new CoreServiceAgent())
                     {
@@ -86,7 +88,7 @@ namespace GuideEnricher
                 }
                 else
                 {
-                    log.Fatal("Unable to connect to ForTheRecordService, check your settings.  Will try again later");
+                    log.Fatal("Unable to connect to Argus TV, check your settings.  Will try again later");
                 }
             }
             catch(ArgusTVNotFoundException notFoundException)
@@ -95,7 +97,7 @@ namespace GuideEnricher
             }
             catch(EndpointNotFoundException)
             {
-                log.Error("Connection to FTR lost, make sure the FTR service is running");
+                log.Error("Connection to Argus TV lost, make sure the Argus TV service is running");
             }
             catch(ArgusTVException ftrException)
             {
@@ -128,17 +130,16 @@ namespace GuideEnricher
                     using (var tvSchedulerServiceAgent = new SchedulerServiceAgent())
                     {
                         var matchMethods = EpisodeMatchMethodLoader.GetMatchMethods();
-                        using (var tvdbLibAccess = new TvdbLibAccess(config, matchMethods))
-                        {
-                            var enricher = new Enricher(config, ftrlogAgent, tvGuideServiceAgent, tvSchedulerServiceAgent, tvdbLibAccess, matchMethods);
-                            enricher.EnrichUpcomingPrograms();
-                        }
+                        var tvDbApi = new TvDbService(config.CacheFolder, config.ApiKey);
+                        var tvdbLibAccess = new TvdbLibAccess(config, matchMethods, tvDbApi);
+                        var enricher = new Enricher(config, ftrlogAgent, tvGuideServiceAgent, tvSchedulerServiceAgent, tvdbLibAccess, matchMethods);
+                        enricher.EnrichUpcomingPrograms();
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                log.Error("Error enriching");
+                log.Error("Error enriching", exception);
             }
             finally
             {

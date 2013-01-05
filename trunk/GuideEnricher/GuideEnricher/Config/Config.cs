@@ -3,22 +3,20 @@
     using System.Collections.Generic;
     using System.Configuration;
 
-    public class Config : IConfiguration
+    public sealed class Config : IConfiguration
     {
-        private static Config configInstance;
+        private static readonly Config configInstance = new Config();
 
         private Config()
         {
         }
 
-        public static Config GetInstance()
+        public static Config Instance
         {
-            if (configInstance == null)
+            get
             {
-                configInstance = new Config();
+                return configInstance;
             }
-
-            return configInstance;
         }
 
         public string getProperty(string key)
@@ -46,7 +44,7 @@
 
         public List<string> getIgnoredSeries()
         {
-            SeriesNameMapsSection mapSec = ConfigurationManager.GetSection("seriesMapping") as SeriesNameMapsSection;
+            var mapSec = ConfigurationManager.GetSection("seriesMapping") as SeriesNameMapsSection;
 
             if (mapSec == null)
             {
@@ -63,6 +61,64 @@
                 }
             }
             return l;
+        }
+
+        public bool UpdateMatchedEpisodes
+        {
+            get
+            {
+                bool returnVal;
+                if(!bool.TryParse(ConfigurationManager.AppSettings["updateAll"], out returnVal))
+                {
+                    return false;
+                }
+
+                return returnVal;
+            }
+        }
+
+        public bool UpdateSubtitlesParameter
+        {
+            get
+            {
+                bool returnVal;
+                if (!bool.TryParse(ConfigurationManager.AppSettings["updateSubtitles"], out returnVal))
+                {
+                    return false;
+                }
+
+                return returnVal;
+            }
+        }
+
+        public bool UpdateDescription
+        {
+            get
+            {
+                bool returnVal;
+                if (!bool.TryParse(ConfigurationManager.AppSettings["episodeInDescription"], out returnVal))
+                {
+                    return false;
+                }
+
+                return returnVal;
+            }
+        }
+
+        public string CacheFolder
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["TvDbLibCache"];
+            }
+        }
+
+        public string ApiKey
+        {
+            get
+            {
+                return "BBB734ABE146900D";
+            }
         }
     }
 }

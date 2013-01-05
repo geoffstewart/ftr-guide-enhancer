@@ -29,12 +29,12 @@
             guideProgram.SeriesNumber = episode.SeasonNumber;
             guideProgram.EpisodeNumberDisplay = Enricher.FormatSeasonAndEpisode(episode.SeasonNumber, episode.EpisodeNumber);
             
-            if (bool.Parse(Config.GetInstance().getProperty("updateSubtitles")))
+            if (bool.Parse(Config.Instance.getProperty("updateSubtitles")))
             {
                 guideProgram.SubTitle = episode.EpisodeName;
             }
 
-            if (bool.Parse(Config.GetInstance().getProperty("episodeInDescription")))
+            if (bool.Parse(Config.Instance.getProperty("episodeInDescription")))
             {
                 var descriptionWithNoEpisodeNumber = Regex.Replace(guideProgram.Description, "^S[0-9][0-9]E[0-9][0-9] - ", string.Empty);
                 guideProgram.Description = string.Format("{0} - {1}", guideProgram.EpisodeNumberDisplay, descriptionWithNoEpisodeNumber);
