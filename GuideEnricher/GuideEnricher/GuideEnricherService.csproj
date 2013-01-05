@@ -26,6 +26,8 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -133,7 +135,9 @@
     <Compile Include="Service.cs" />
     <Compile Include="exception\NoSeriesMatchException.cs" />
     <Compile Include="exception\SeriesIgnoredException.cs" />
+    <Compile Include="tvdb\ITvDbService.cs" />
     <Compile Include="tvdb\TvdbLibAccess.cs" />
+    <Compile Include="tvdb\TvDbService.cs" />
     <Compile Include="TvEpisodeComparer.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -160,10 +164,9 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <None Include="app.config">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
+  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>

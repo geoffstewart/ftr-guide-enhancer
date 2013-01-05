@@ -25,17 +25,16 @@ namespace GuideEnricher.tvdb
     /// <summary>
     /// Description of TvdbLibAccess.
     /// </summary>
-    public class TvdbLibAccess: IDisposable
+    public class TvdbLibAccess
     {
-        private const string TVDBID = "BBB734ABE146900D";  // mine, don't abuse it!!!
         private const string MODULE = "GuideEnricher";
         private const string REMOVE_PUNCTUATION = @"[^ a-zA-Z]";
         
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IConfiguration config;
         private readonly List<IEpisodeMatchMethod> matchMethods;
+        private readonly ITvDbService tvDbService;
 
-        private TvdbHandler tvdbHandler;
         private Dictionary<string, string> seriesNameMapping;
         private Dictionary<string, int> seriesIDMapping = new Dictionary<string, int>();
         private Dictionary<string, string> seriesNameRegex = new Dictionary<string, string>();
@@ -45,19 +44,16 @@ namespace GuideEnricher.tvdb
 
         private TvdbLanguage language = TvdbLanguage.DefaultLanguage;
 
-        public TvdbLibAccess(IConfiguration configuration, List<IEpisodeMatchMethod> matchMethods)
+        public TvdbLibAccess(IConfiguration configuration, List<IEpisodeMatchMethod> matchMethods, ITvDbService tvDbService)
         {
             this.config = configuration;
             this.matchMethods = matchMethods;
+            this.tvDbService = tvDbService;
             this.Init();
         }
 
         private void Init()
         {
-            string cache = this.config.getProperty("TvDbLibCache");
-            tvdbHandler = new TvdbHandler(new XmlCacheProvider(cache), TVDBID);
-            tvdbHandler.InitCache();
-
             seriesNameMapping = this.config.getSeriesNameMap();
             seriesIgnore = this.config.getIgnoredSeries();
             this.language = SetLanguage();
@@ -100,10 +96,10 @@ namespace GuideEnricher.tvdb
             {
                 try
                 {
-                    tvdbSeries = this.tvdbHandler.GetSeries(seriesId, this.language, true, false, false);
+                    tvdbSeries = this.tvDbService.GetSeries(seriesId, this.language, true, false, false);
                     if (forceRefresh)
                     {
-                        tvdbSeries = this.tvdbHandler.ForceReload(tvdbSeries, true, false, false);
+                        tvdbSeries = this.tvDbService.ForceReload(tvdbSeries, true, false, false);
                     }
 
                     callSuccessful = true;
@@ -124,11 +120,6 @@ namespace GuideEnricher.tvdb
             {
                 this.log.InfoFormat("S{0:00}E{1:00}-{2}", episode.SeasonNumber, episode.EpisodeNumber, episode.EpisodeName);
             }
-        }
-
-        public void Dispose()
-        {
-            this.tvdbHandler.CloseCache();
         }
 
         private void IntializeRegexMappings()
@@ -153,17 +144,18 @@ namespace GuideEnricher.tvdb
 
         private TvdbLanguage SetLanguage()
         {
-            List<TvdbLanguage> availableLanguages = this.tvdbHandler.Languages;
+            TvdbLanguage lang = TvdbLanguage.UniversalLanguage;
+            
+            List<TvdbLanguage> availableLanguages = this.tvDbService.Languages;
             string selectedLanguage = this.config.getProperty("TvDbLanguage");
             
             // if there is a value for TvDbLanguage in the settings, set the right language
-            if (string.IsNullOrEmpty(selectedLanguage))
+            if (!string.IsNullOrEmpty(selectedLanguage))
             {
-                selectedLanguage = "en";
+                lang = availableLanguages.Find(x => x.Abbriviation == selectedLanguage);
+                this.log.DebugFormat("Language: {0}", lang.Abbriviation);
             }
 
-            TvdbLanguage lang = availableLanguages.Find(x => x.Abbriviation == selectedLanguage);
-            this.log.DebugFormat("Language: {0}", lang.Abbriviation);
             return lang;
         }
 
@@ -172,7 +164,11 @@ namespace GuideEnricher.tvdb
             // TODO: A few things here.  We should add more intelligence when there is more then 1 match
             // Things like default to (US) or (UK) or what ever is usally the case.  Also, perhaps a global setting that would always take newest series first...
 
-            if (this.IsSeriesIgnored(seriesName)) return 0;
+            if (this.IsSeriesIgnored(seriesName))
+            {
+                return 0;
+            }
+
             if (this.seriesIDMapping.ContainsKey(seriesName))
             {
                 var seriesid = this.seriesIDMapping[seriesName];
@@ -218,7 +214,7 @@ namespace GuideEnricher.tvdb
                 }
             }
 
-            List<TvdbSearchResult> searchResults = tvdbHandler.SearchSeries(searchSeries, this.language);
+            List<TvdbSearchResult> searchResults = this.tvDbService.SearchSeries(searchSeries, this.language);
 
             log.DebugFormat("SD-TvDb: Search for {0} return {1} results", searchSeries, searchResults.Count);
             
