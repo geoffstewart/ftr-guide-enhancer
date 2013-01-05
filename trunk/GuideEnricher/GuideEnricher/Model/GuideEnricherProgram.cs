@@ -3,15 +3,15 @@ namespace GuideEnricher.Model
     using System;
     using ArgusTV.DataContracts;
 
-    public class GuideEnricherEntities : GuideProgram, IProgramSummary
+    public class GuideEnricherProgram : GuideProgram, IProgramSummary
     {
         protected GuideProgram guideProgram;
 
-        protected GuideEnricherEntities()
+        protected GuideEnricherProgram()
         {
         }
 
-        public GuideEnricherEntities(GuideProgram guideProgram)
+        public GuideEnricherProgram(GuideProgram guideProgram)
         {
             this.guideProgram = guideProgram;
             this.Matched = this.EpisodeIsEnriched();
@@ -231,9 +231,9 @@ namespace GuideEnricher.Model
         }
     }
 
-    public static class GuideEnricherEntitiesExtensionMethods
+    public static class GuideProgramExtensionMethods
     {
-        public static int GetValidEpisodeNumber(this GuideEnricherEntities guideProgram)
+        public static int GetValidEpisodeNumber(this GuideEnricherProgram guideProgram)
         {
             int episodeNumber;
             if (!guideProgram.EpisodeNumber.HasValue)

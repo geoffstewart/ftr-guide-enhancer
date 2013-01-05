@@ -112,8 +112,8 @@
     <Compile Include="Config\MatchMethodCollection.cs" />
     <Compile Include="Config\MatchMethodsSection.cs" />
     <Compile Include="EpisodeMatchMethods\AirDateMatchMethod.cs" />
-    <Compile Include="EpisodeMatchMethods\ThreeDigitSeasonEpisodeMatchMethod.cs" />
-    <Compile Include="Model\GuideEnricherEntities.cs" />
+    <Compile Include="EpisodeMatchMethods\ThreeOrFourDigitSeasonEpisodeMatchMethod.cs" />
+    <Compile Include="Model\GuideEnricherProgram.cs" />
     <Compile Include="EpisodeMatchMethodLoader.cs" />
     <Compile Include="EpisodeMatchMethods\AbsoluteEpisodeNumberMatchMethod.cs" />
     <Compile Include="EpisodeMatchMethods\MatchMethodBase.cs" />
@@ -164,7 +164,9 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />

@@ -2,35 +2,24 @@
 {
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
 
     using GuideEnricher.Model;
 
     using TvdbLib.Data;
 
-    using log4net;
-
-    public class ThreeDigitSeasonEpisodeMatchMethod : MatchMethodBase
+    public class ThreeOrFourDigitSeasonEpisodeMatchMethod : MatchMethodBase
     {
-        private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public override string MethodName
         {
             get
             {
-                return "Three Digit Season Episode";
+                return "Three or Four Digit Season Episode";
             }
         }
 
-        public override bool Match(GuideEnricherEntities enrichedGuideProgram, List<TvdbEpisode> episodes)
+        public override bool Match(GuideEnricherProgram enrichedGuideProgram, List<TvdbEpisode> episodes)
         {
-            var lastSeasonNumber = episodes.Max(x => x.SeasonNumber);
             var episodeNumber = enrichedGuideProgram.GetValidEpisodeNumber();
-            if (lastSeasonNumber > 9)
-            {
-                this.log.DebugFormat("Cannot use match method [{0}] for {1} as there are more than 9 seasons", this.MethodName, enrichedGuideProgram.Title);
-                return false;
-            }
 
             this.MatchAttempts++;
 

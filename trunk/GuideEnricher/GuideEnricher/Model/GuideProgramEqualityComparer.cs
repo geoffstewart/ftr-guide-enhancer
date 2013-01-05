@@ -2,14 +2,14 @@ namespace GuideEnricher.Model
 {
     using System.Collections.Generic;
 
-    public class GuideProgramEqualityComparer : IEqualityComparer<GuideEnricherEntities>
+    public class GuideProgramEqualityComparer : IEqualityComparer<GuideEnricherProgram>
     {
-        public bool Equals(GuideEnricherEntities x, GuideEnricherEntities y)
+        public bool Equals(GuideEnricherProgram x, GuideEnricherProgram y)
         {
             return x.GuideProgramId == y.GuideProgramId;
         }
 
-        public int GetHashCode(GuideEnricherEntities obj)
+        public int GetHashCode(GuideEnricherProgram obj)
         {
             return obj.GetHashCode();
         }

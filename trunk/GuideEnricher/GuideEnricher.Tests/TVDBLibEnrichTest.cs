@@ -2,21 +2,24 @@
 {
     using System;
     using System.Collections.Generic;
+
     using GuideEnricher.Config;
     using GuideEnricher.EpisodeMatchMethods;
     using GuideEnricher.tvdb;
 
-    using Should;
-
     using log4net.Config;
-    using Moq;
+
     using NUnit.Framework;
+
+    using Should;
 
     /// <summary>
     /// Use this class to test actual episodes against TVDB
     /// This is useful to test if a series will be matched correctly given a configuration
     /// </summary>
-    [TestFixture]
+    /// These tests are being ignored for now as TVDB is not always responding and slowing down tests
+    /// It's bad practice anyways ;)
+    [TestFixture, Ignore]
     public class TVDBLibEnrichTest
     {
         private List<TestProgram> testPrograms;
@@ -36,7 +39,7 @@
 //            this.testPrograms.Add(new TestProgram("Family Guy", "Deep Throats", 74, "S04E23"));
 //            this.testPrograms.Add(new TestProgram("The Big Bang Theory", "The Zazzy Substitution", 0, "S04E03"));
 //            this.testPrograms.Add(new TestProgram("Castle", "Pretty Dead (59)", 59, "S03E23"));
-//            this.testPrograms.Add(new TestProgram("Shark Tank", "Episode 2", 202, "S02E02"));
+            this.testPrograms.Add(new TestProgram("Shark Tank", "Episode 2", 202, "S02E02"));
         }
 
         [Test]
@@ -44,8 +47,8 @@
         {
             var matchMethods = new List<IEpisodeMatchMethod>();
 
-            var tvDbApi = new TvDbService("tvdbCache", Config.Instance.ApiKey);
-            var tvdbLib = new TvdbLibAccess(Config.Instance, matchMethods, tvDbApi);
+            var tvDbService = new TvDbService("tvdbCache", Config.Instance.ApiKey);
+            var tvdbLib = new TvdbLibAccess(Config.Instance, matchMethods, tvDbService);
 
             var seriesID = tvdbLib.getSeriesId("American Dad");
 

@@ -16,7 +16,7 @@ namespace GuideEnricher.EpisodeMatchMethods
             get { return "Original Air Date";  }
         }
 
-        public override bool Match(GuideEnricherEntities guideProgram, List<TvdbEpisode> episodes)
+        public override bool Match(GuideEnricherProgram guideProgram, List<TvdbEpisode> episodes)
         {
             if (!guideProgram.PreviouslyAiredTime.HasValue)
             {
