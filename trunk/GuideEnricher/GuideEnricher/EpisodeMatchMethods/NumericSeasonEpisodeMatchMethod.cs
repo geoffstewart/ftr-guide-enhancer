@@ -7,7 +7,7 @@
 
     using TvdbLib.Data;
 
-    public class ThreeOrFourDigitSeasonEpisodeMatchMethod : MatchMethodBase
+    public class NumericSeasonEpisodeMatchMethod : MatchMethodBase
     {
         public override string MethodName
         {
