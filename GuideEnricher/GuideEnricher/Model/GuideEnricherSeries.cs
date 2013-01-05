@@ -19,19 +19,19 @@
             this.updateSubtitles = updateSubtitlesParameter;
             this.updateDescription = updateDescription;
 
-            this.PendingPrograms = new List<GuideEnricherEntities>();
-            this.SuccessfulPrograms = new List<GuideEnricherEntities>();
-            this.FailedPrograms = new List<GuideEnricherEntities>();
-            this.IgnoredPrograms = new List<GuideEnricherEntities>();
+            this.PendingPrograms = new List<GuideEnricherProgram>();
+            this.SuccessfulPrograms = new List<GuideEnricherProgram>();
+            this.FailedPrograms = new List<GuideEnricherProgram>();
+            this.IgnoredPrograms = new List<GuideEnricherProgram>();
         }
 
-        public List<GuideEnricherEntities> PendingPrograms { get; set; }
+        public List<GuideEnricherProgram> PendingPrograms { get; set; }
 
-        public List<GuideEnricherEntities> SuccessfulPrograms { get; set; }
+        public List<GuideEnricherProgram> SuccessfulPrograms { get; set; }
 
-        public List<GuideEnricherEntities> FailedPrograms { get; set; }
+        public List<GuideEnricherProgram> FailedPrograms { get; set; }
 
-        public List<GuideEnricherEntities> IgnoredPrograms { get; set; }
+        public List<GuideEnricherProgram> IgnoredPrograms { get; set; }
 
         public string Title { get; set; }
         
@@ -42,7 +42,7 @@
         public bool isIgnored { get; set; }
         
 
-        public void AddProgram(GuideEnricherEntities program)
+        public void AddProgram(GuideEnricherProgram program)
         {
             if (!this.updateAll && program.Matched)
             {
@@ -60,15 +60,15 @@
             }
         }
 
-        public void AddAllToEnrichedPrograms(GuideEnricherEntities program)
+        public void AddAllToEnrichedPrograms(GuideEnricherProgram program)
         {
             SuccessfulPrograms.Add(program);
             PendingPrograms.Remove(program);
             var similarPrograms = this.FindSimilarPrograms(this.PendingPrograms.FindAll(x => x.SubTitle == program.OriginalSubTitle), program);
             if (similarPrograms.Count > 0)
             {
-                PendingPrograms = new List<GuideEnricherEntities>(PendingPrograms.Except(similarPrograms));
-                foreach (GuideEnricherEntities similarProgram in similarPrograms)
+                PendingPrograms = new List<GuideEnricherProgram>(PendingPrograms.Except(similarPrograms));
+                foreach (GuideEnricherProgram similarProgram in similarPrograms)
                 {
                     similarProgram.SeriesNumber = program.SeriesNumber;
                     similarProgram.EpisodeNumber = program.EpisodeNumber;
@@ -88,20 +88,20 @@
             }
         }
 
-        public List<GuideEnricherEntities> FindSimilarPrograms(List<GuideEnricherEntities> pendingPrograms, GuideEnricherEntities program)
+        public List<GuideEnricherProgram> FindSimilarPrograms(List<GuideEnricherProgram> pendingPrograms, GuideEnricherProgram program)
         {
-            List<GuideEnricherEntities> similarPrograms = pendingPrograms;
+            List<GuideEnricherProgram> similarPrograms = pendingPrograms;
             return similarPrograms;
         }
 
-        public void AddAllToFailedPrograms(GuideEnricherEntities program)
+        public void AddAllToFailedPrograms(GuideEnricherProgram program)
         {
             FailedPrograms.Add(program);
             PendingPrograms.Remove(program);
-            List<GuideEnricherEntities> similarPrograms = PendingPrograms.FindAll(x => x.SubTitle == program.OriginalSubTitle);
+            List<GuideEnricherProgram> similarPrograms = PendingPrograms.FindAll(x => x.SubTitle == program.OriginalSubTitle);
             if (similarPrograms.Count > 0)
             {
-                PendingPrograms = new List<GuideEnricherEntities>(PendingPrograms.Except(similarPrograms));                
+                PendingPrograms = new List<GuideEnricherProgram>(PendingPrograms.Except(similarPrograms));                
                 FailedPrograms.AddRange(similarPrograms);
             }
         }

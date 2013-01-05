@@ -4,6 +4,8 @@ namespace GuideEnricher.Tests
     using GuideEnricher.Model;
     using NUnit.Framework;
 
+    using Should;
+
     [TestFixture]
     public class GuiderEnricherProgramTests
     {
@@ -14,16 +16,16 @@ namespace GuideEnricher.Tests
             guideProgram.SeriesNumber = 3;
             guideProgram.EpisodeNumber = 10;
             guideProgram.EpisodeNumberDisplay = "S03E10";
-            var program = new GuideEnricherEntities(guideProgram);
-            Assert.IsTrue(program.EpisodeIsEnriched());
+            var program = new GuideEnricherProgram(guideProgram);
+            program.EpisodeIsEnriched().ShouldBeTrue();
         }
 
         [Test]
         public void EpisodeIsEnricherReturnsFalseWhenNoEpisodeNumber()
         {
             var guideProgram = new GuideProgram();
-            var program = new GuideEnricherEntities(guideProgram);
-            Assert.IsFalse(program.EpisodeIsEnriched());
+            var program = new GuideEnricherProgram(guideProgram);
+            program.EpisodeIsEnriched().ShouldBeFalse();
         }
 
         [Test]
@@ -33,8 +35,8 @@ namespace GuideEnricher.Tests
             guideProgram.SeriesNumber = 3;
             guideProgram.EpisodeNumber = 10;
             guideProgram.EpisodeNumberDisplay = "Test";
-            var program = new GuideEnricherEntities(guideProgram);
-            Assert.IsFalse(program.EpisodeIsEnriched());
+            var program = new GuideEnricherProgram(guideProgram);
+            program.EpisodeIsEnriched().ShouldBeFalse();
         }
     }
 }

@@ -98,7 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GuiderEnricherProgramTests.cs" />
-    <Compile Include="MatchMethodTests.cs" />
+    <Compile Include="MatchMethodsTests\ThreeOrFourDigitSeasonEpisodeMatchMethodTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestProgram.cs" />
     <Compile Include="TVDBLibEnrichTest.cs" />

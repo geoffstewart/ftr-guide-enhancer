@@ -20,9 +20,9 @@
 
         public abstract string MethodName { get; }
 
-        public abstract bool Match(GuideEnricherEntities enrichedGuideProgram, List<TvdbEpisode> episodes);
+        public abstract bool Match(GuideEnricherProgram enrichedGuideProgram, List<TvdbEpisode> episodes);
 
-        protected bool Matched(GuideEnricherEntities guideProgram, TvdbEpisode episode)
+        protected bool Matched(GuideEnricherProgram guideProgram, TvdbEpisode episode)
         {
             this.SuccessfulMatches++;
             guideProgram.EpisodeNumber = episode.EpisodeNumber;
@@ -44,7 +44,7 @@
             return true;
         }
 
-        protected bool Unmatched(GuideEnricherEntities guideProgram)
+        protected bool Unmatched(GuideEnricherProgram guideProgram)
         {
             this.log.DebugFormat("[{0}] Could not match {1} - {2}", this.MethodName, guideProgram.Title, guideProgram.SubTitle);
             return false;

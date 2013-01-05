@@ -1,12 +1,12 @@
 namespace GuideEnricher.EpisodeMatchMethods
 {
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
     using GuideEnricher.Model;
-    using log4net;
     using TvdbLib.Data;
-    using System.Linq;
-
+    using log4net;
+    
     public class AbsoluteEpisodeNumberMatchMethod : MatchMethodBase
     {
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -16,7 +16,7 @@ namespace GuideEnricher.EpisodeMatchMethods
             get { return "Absolute Episode Number"; }
         }
 
-        public override bool Match(GuideEnricherEntities guideProgram, List<TvdbEpisode> episodes)
+        public override bool Match(GuideEnricherProgram guideProgram, List<TvdbEpisode> episodes)
         {
             var episodeNumber = guideProgram.GetValidEpisodeNumber();
             if (episodeNumber == 0)

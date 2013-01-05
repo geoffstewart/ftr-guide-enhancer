@@ -12,6 +12,6 @@ namespace GuideEnricher.EpisodeMatchMethods
 
         string MethodName { get; }
 
-        bool Match(GuideEnricherEntities enrichedGuideProgram, List<TvdbEpisode> episodes);
+        bool Match(GuideEnricherProgram enrichedGuideProgram, List<TvdbEpisode> episodes);
     }
 }

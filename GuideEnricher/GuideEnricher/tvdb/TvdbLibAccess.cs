@@ -60,7 +60,7 @@ namespace GuideEnricher.tvdb
             this.IntializeRegexMappings();
         }
 
-        public void EnrichProgram(GuideEnricherEntities existingProgram, TvdbSeries tvdbSeries)
+        public void EnrichProgram(GuideEnricherProgram existingProgram, TvdbSeries tvdbSeries)
         {
             log.DebugFormat("Starting lookup for {0} - {1}", existingProgram.Title, existingProgram.SubTitle);
 

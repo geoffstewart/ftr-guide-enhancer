@@ -16,7 +16,7 @@
     public class Enricher
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly List<GuideEnricherEntities> enrichedPrograms;
+        private readonly List<GuideEnricherProgram> enrichedPrograms;
         private readonly ISchedulerService tvSchedulerService;
         private readonly IGuideService tvGuideService;
         private readonly IConfiguration config;
@@ -30,7 +30,7 @@
         public Enricher(IConfiguration configuration, ILogService ftrLogService, IGuideService tvGuideService, ISchedulerService tvSchedulerService, TvdbLibAccess tvdbLibAccess, List<IEpisodeMatchMethod> matchMethods)
         {
             this.config = configuration;
-            this.enrichedPrograms = new List<GuideEnricherEntities>();
+            this.enrichedPrograms = new List<GuideEnricherProgram>();
             this.ftrlogAgent = ftrLogService;
             this.tvGuideService = tvGuideService;
             this.tvSchedulerService = tvSchedulerService;
@@ -78,7 +78,7 @@
                     break;
                 }
 
-                var guideProgram = new GuideEnricherEntities(this.tvGuideService.GetProgramById(program.GuideProgramId.Value));
+                var guideProgram = new GuideEnricherProgram(this.tvGuideService.GetProgramById(program.GuideProgramId.Value));
                 if (!this.seriesToEnrich.ContainsKey(guideProgram.Title))
                 {
                     this.seriesToEnrich.Add(guideProgram.Title, new GuideEnricherSeries(guideProgram.Title, config.UpdateMatchedEpisodes, config.UpdateSubtitlesParameter, config.UpdateDescription));
@@ -132,7 +132,7 @@
             this.tvdbLibAccess.DebugEpisodeDump(OnlineSeries);
             do
             {
-                GuideEnricherEntities guideProgram = series.PendingPrograms[0];
+                GuideEnricherProgram guideProgram = series.PendingPrograms[0];
                 this.tvdbLibAccess.EnrichProgram(guideProgram, OnlineSeries);
                 if (guideProgram.Matched)
                 {
