@@ -24,7 +24,7 @@ namespace GuideEnricher.Tests.MatchMethodsTests
     [TestFixture]
     public class ThreeOrFourDigitSeasonEpisodeMatchMethodTests
     {
-        private readonly ThreeOrFourDigitSeasonEpisodeMatchMethod matcher = new ThreeOrFourDigitSeasonEpisodeMatchMethod();
+        private readonly NumericSeasonEpisodeMatchMethod matcher = new NumericSeasonEpisodeMatchMethod();
 
         private List<TvdbEpisode> episodes;
 

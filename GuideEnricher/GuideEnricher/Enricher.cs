@@ -69,7 +69,6 @@
         private void AddUpcomingPrograms(ScheduleType scheduleType)
         {
             var programs = this.tvSchedulerService.GetAllUpcomingPrograms(scheduleType, true);
-
             foreach (var program in programs.Where(p => p.Channel.ChannelType == ChannelType.Television))
             {
                 if (!program.GuideProgramId.HasValue)

@@ -55,7 +55,7 @@ namespace GuideEnricher
             log.Info("Service stopping");
         }
 
-        private void SetupFTRConnection(Object state, ElapsedEventArgs eventArgs)
+        public void SetupFTRConnection(Object state, ElapsedEventArgs eventArgs)
         {
             try
             {
@@ -73,7 +73,7 @@ namespace GuideEnricher
                 }
 
                 log.Debug("Trying to connect to Argus TV");
-                ServerSettings serverSettings = this.GetServerSettings();
+                ServerSettings serverSettings = GetServerSettings();
                 if (ServiceChannelFactories.Initialize(serverSettings, true))
                 {
                     ftrlogAgent = new LogServiceAgent();
@@ -156,7 +156,7 @@ namespace GuideEnricher
             }
         }
 
-        private ServerSettings GetServerSettings()
+        public static ServerSettings GetServerSettings()
         {
             var serverSettings = new ServerSettings();
             serverSettings.ServerName = config.getProperty("ftrUrlHost");
