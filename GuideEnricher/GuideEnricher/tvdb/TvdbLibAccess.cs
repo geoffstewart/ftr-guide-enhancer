@@ -42,7 +42,7 @@ namespace GuideEnricher.tvdb
 
         private Dictionary<string, int> seriesCache = new Dictionary<string, int>();
 
-        private TvdbLanguage language = TvdbLanguage.DefaultLanguage;
+        private TvdbLanguage language;
 
         public TvdbLibAccess(IConfiguration configuration, List<IEpisodeMatchMethod> matchMethods, ITvDbService tvDbService)
         {
@@ -144,7 +144,7 @@ namespace GuideEnricher.tvdb
 
         private TvdbLanguage SetLanguage()
         {
-            TvdbLanguage lang = TvdbLanguage.UniversalLanguage;
+            TvdbLanguage lang = TvdbLanguage.DefaultLanguage;
             
             List<TvdbLanguage> availableLanguages = this.tvDbService.Languages;
             string selectedLanguage = this.config.getProperty("TvDbLanguage");

@@ -9,8 +9,6 @@ namespace GuideEnricher.EpisodeMatchMethods
 
     public class AirDateMatchMethod : MatchMethodBase
     {
-        private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public override string MethodName
         {
             get { return "Original Air Date";  }
@@ -20,7 +18,6 @@ namespace GuideEnricher.EpisodeMatchMethods
         {
             if (!guideProgram.PreviouslyAiredTime.HasValue)
             {
-                this.log.DebugFormat("[{0}] {1} - {2:MM/dd hh:mm tt} does not have an original air date", this.MethodName, guideProgram.Title, guideProgram.StartTime);
                 return false;
             }
 

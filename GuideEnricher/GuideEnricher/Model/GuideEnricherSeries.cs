@@ -98,7 +98,7 @@
         {
             FailedPrograms.Add(program);
             PendingPrograms.Remove(program);
-            List<GuideEnricherProgram> similarPrograms = PendingPrograms.FindAll(x => x.SubTitle == program.OriginalSubTitle);
+            List<GuideEnricherProgram> similarPrograms = PendingPrograms.FindAll(x => x.SubTitle == program.OriginalSubTitle && !(string.IsNullOrEmpty(program.OriginalSubTitle)));
             if (similarPrograms.Count > 0)
             {
                 PendingPrograms = new List<GuideEnricherProgram>(PendingPrograms.Except(similarPrograms));                
