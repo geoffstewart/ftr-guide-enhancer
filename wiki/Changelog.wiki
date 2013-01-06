@@ -1,6 +1,7 @@
 ===Version v2.0.2===
   * Enabled matching episodes for shows with 10+ seasons (ie: episode #1302 is Season 13, epiosde 2)
   * Disabled absolute episode number in config file.
+  * Added logic to not remove failed programs from the queue based on subtitle when subtitle was blank
 
 ===Version v2.0.1===
   * Language bug fix when looking up TheTVDB
