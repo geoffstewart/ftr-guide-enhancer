@@ -14,7 +14,6 @@ namespace GuideEnricher
     public class Service
     {
         private const string MODULE = "GuideEnricher";
-        private const string TVDBID = "BBB734ABE146900D";  // mine, don't abuse it!!!
 
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly IConfiguration config = Config.Config.Instance;
