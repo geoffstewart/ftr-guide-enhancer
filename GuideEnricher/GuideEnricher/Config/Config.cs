@@ -120,5 +120,18 @@
                 return "BBB734ABE146900D";
             }
         }
+
+        public bool EnrichHistory { 
+            get
+            {
+                bool returnVal;
+                if (!bool.TryParse(ConfigurationManager.AppSettings["EnrichHistory"], out returnVal))
+                {
+                    return false;
+                }
+
+                return returnVal;
+            }
+        }
     }
 }

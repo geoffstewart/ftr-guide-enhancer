@@ -17,5 +17,7 @@ namespace GuideEnricher.Config
         string CacheFolder { get; }
 
         string ApiKey { get; }
+
+        bool EnrichHistory { get; }
     }
 }

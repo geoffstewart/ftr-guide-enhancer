@@ -18,6 +18,7 @@
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<GuideEnricherProgram> enrichedPrograms;
         private readonly ISchedulerService tvSchedulerService;
+        private readonly IControlService coreService;
         private readonly IGuideService tvGuideService;
         private readonly IConfiguration config;
         private readonly ILogService ftrlogAgent;
@@ -27,11 +28,12 @@
 
         private const string MODULE = "GuideEnricher";
 
-        public Enricher(IConfiguration configuration, ILogService ftrLogService, IGuideService tvGuideService, ISchedulerService tvSchedulerService, TvdbLibAccess tvdbLibAccess, List<IEpisodeMatchMethod> matchMethods)
+        public Enricher(IConfiguration configuration, ILogService ftrLogService, IControlService coreService, IGuideService tvGuideService, ISchedulerService tvSchedulerService, TvdbLibAccess tvdbLibAccess, List<IEpisodeMatchMethod> matchMethods)
         {
             this.config = configuration;
             this.enrichedPrograms = new List<GuideEnricherProgram>();
             this.ftrlogAgent = ftrLogService;
+            this.coreService = coreService;
             this.tvGuideService = tvGuideService;
             this.tvSchedulerService = tvSchedulerService;
             this.tvdbLibAccess = tvdbLibAccess;
@@ -43,6 +45,11 @@
         {
             this.AddUpcomingPrograms(ScheduleType.Suggestion);
             this.AddUpcomingPrograms(ScheduleType.Recording);
+
+            if (this.config.EnrichHistory)
+            {
+
+            }
 
             foreach (var series in this.seriesToEnrich.Values)
             {
@@ -84,6 +91,24 @@
                 }
 
                 this.seriesToEnrich[guideProgram.Title].AddProgram(guideProgram);
+            }
+        }
+
+        private void AddPreviouslyRecordedPrograms()
+        {
+            var schedules = this.tvSchedulerService.GetAllSchedules(ChannelType.Television, ScheduleType.Recording, false);
+            foreach (var schedule in schedules)
+            {
+                foreach (var program in this.coreService.GetPreviouslyRecordedHistory(schedule.ScheduleId))
+                {
+                    if (!this.seriesToEnrich.ContainsKey(program.Title))
+                    {
+                        this.seriesToEnrich.Add(program.Title, new GuideEnricherSeries(program.Title, config.UpdateMatchedEpisodes, config.UpdateSubtitlesParameter, config.UpdateDescription));
+                    }
+
+                    var guideProgram = new GuideEnricherProgram(ScheduleRecordedProgram)
+                    this.seriesToEnrich[program.Title].AddProgram(guideProgram);
+                }
             }
         }
 

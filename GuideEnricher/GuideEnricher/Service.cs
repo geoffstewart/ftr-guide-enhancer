@@ -111,6 +111,11 @@ namespace GuideEnricher
 
         public static void Enrich(Object state, ElapsedEventArgs eventArgs)
         {
+            var tvGuideServiceAgent = new GuideServiceAgent();
+            var controlServiceAgent = new ControlServiceAgent();
+            var tvSchedulerServiceAgent = new SchedulerServiceAgent();
+            var agent = new CoreServiceAgent();
+            
             try
             {
                 lock (lockThis)
@@ -118,22 +123,13 @@ namespace GuideEnricher
                     BusyEnriching = true;
                 }
 
-                using (var agent = new CoreServiceAgent())
-                {
-                    log.DebugFormat("Ping {0}", agent.Ping(0));
-                }
+                log.DebugFormat("Ping {0}", agent.Ping(0));
 
-                using (var tvGuideServiceAgent = new GuideServiceAgent())
-                {
-                    
-                    using (var tvSchedulerServiceAgent = new SchedulerServiceAgent())
-                    {
-                        var matchMethods = EpisodeMatchMethodLoader.GetMatchMethods();
-                        var tvDbApi = new TvDbService(config.CacheFolder, config.ApiKey);
-                        var tvdbLibAccess = new TvdbLibAccess(config, matchMethods, tvDbApi);
-                        var enricher = new Enricher(config, ftrlogAgent, tvGuideServiceAgent, tvSchedulerServiceAgent, tvdbLibAccess, matchMethods);
-                        enricher.EnrichUpcomingPrograms();
-                    }
+                var matchMethods = EpisodeMatchMethodLoader.GetMatchMethods();
+                var tvDbApi = new TvDbService(config.CacheFolder, config.ApiKey);
+                var tvdbLibAccess = new TvdbLibAccess(config, matchMethods, tvDbApi);
+                var enricher = new Enricher(config, ftrlogAgent, controlServiceAgent, tvGuideServiceAgent, tvSchedulerServiceAgent, tvdbLibAccess, matchMethods);
+                enricher.EnrichUpcomingPrograms();
                 }
             }
             catch (Exception exception)
@@ -142,6 +138,13 @@ namespace GuideEnricher
             }
             finally
             {
+                if (tvGuideServiceAgent != null)
+                {
+                    tvGuideServiceAgent.Dispose();    
+                }
+
+                if()
+                
                 lock (lockThis)
                 {
                     BusyEnriching = false;
