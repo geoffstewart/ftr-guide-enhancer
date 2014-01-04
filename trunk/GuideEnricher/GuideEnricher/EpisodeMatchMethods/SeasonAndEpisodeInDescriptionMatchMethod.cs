@@ -25,7 +25,6 @@ using System.Text.RegularExpressions;
 
         public override bool Match(GuideEnricherProgram enrichedGuideProgram, List<TvdbEpisode> episodes)
         {
-            this.MatchAttempts++;
             Match match = null;
             int index = 0;
             do
@@ -34,6 +33,7 @@ using System.Text.RegularExpressions;
             } while (string.IsNullOrEmpty(match.Value) && index < regexes.Count);
             if (match != null && !string.IsNullOrEmpty(match.Value))
             {
+                this.MatchAttempts++;
                 int seasonNumber=0;
                 int episodeNumber=0;
                 if (!int.TryParse(match.Groups["season"].Value, out seasonNumber))
