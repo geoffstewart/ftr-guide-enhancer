@@ -112,6 +112,9 @@
     <Compile Include="Config\MatchMethodCollection.cs" />
     <Compile Include="Config\MatchMethodsSection.cs" />
     <Compile Include="EpisodeMatchMethods\AirDateMatchMethod.cs" />
+    <Compile Include="EpisodeMatchMethods\InQuotesInDescriptionMatchMethod.cs" />
+    <Compile Include="EpisodeMatchMethods\FirstSentenceInDescriptionMatchMethod.cs" />
+    <Compile Include="EpisodeMatchMethods\SeasonAndEpisodeInDescriptionMatchMethod.cs" />
     <Compile Include="EpisodeMatchMethods\NumericSeasonEpisodeMatchMethod.cs" />
     <Compile Include="Model\GuideEnricherProgram.cs" />
     <Compile Include="EpisodeMatchMethodLoader.cs" />

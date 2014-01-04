@@ -21,10 +21,10 @@
 
         public override bool Match(GuideEnricherProgram enrichedGuideProgram, List<TvdbEpisode> episodes)
         {
-            this.MatchAttempts++;
             var match = quotedSentence.Match(enrichedGuideProgram.Description);
             if (match != null && !string.IsNullOrEmpty(match.Value))
             {
+                this.MatchAttempts++;
                 var matchedEpisode = episodes.FirstOrDefault(x => x.EpisodeName == match.Value);
                 if (matchedEpisode != null)
                 {
