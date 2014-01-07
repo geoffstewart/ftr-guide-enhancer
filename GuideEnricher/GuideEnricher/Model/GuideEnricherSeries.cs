@@ -64,7 +64,8 @@
         {
             SuccessfulPrograms.Add(program);
             PendingPrograms.Remove(program);
-            var similarPrograms = this.FindSimilarPrograms(this.PendingPrograms.FindAll(x => x.SubTitle == program.OriginalSubTitle), program);
+            // only if SubTitle is NOT empty
+            var similarPrograms = this.FindSimilarPrograms(this.PendingPrograms.FindAll(x => !string.IsNullOrEmpty(x.SubTitle) && x.SubTitle == program.OriginalSubTitle), program);
             if (similarPrograms.Count > 0)
             {
                 PendingPrograms = new List<GuideEnricherProgram>(PendingPrograms.Except(similarPrograms));

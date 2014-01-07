@@ -55,7 +55,7 @@ using System.Text.RegularExpressions;
                     }
                 }
             }
-            return false;
+            return this.Unmatched(enrichedGuideProgram);
         }
 
         protected int RomanToNumeric(string romanNum)
