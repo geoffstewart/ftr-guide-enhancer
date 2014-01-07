@@ -22,16 +22,16 @@
         public override bool Match(GuideEnricherProgram enrichedGuideProgram, List<TvdbEpisode> episodes)
         {
             var match = quotedSentence.Match(enrichedGuideProgram.Description);
-            if (match != null && !string.IsNullOrEmpty(match.Value))
+            if (match == null || string.IsNullOrEmpty(match.Value))
+                return false;
+            
+            this.MatchAttempts++;
+            var matchedEpisode = episodes.FirstOrDefault(x => x.EpisodeName == match.Value);
+            if (matchedEpisode != null)
             {
-                this.MatchAttempts++;
-                var matchedEpisode = episodes.FirstOrDefault(x => x.EpisodeName == match.Value);
-                if (matchedEpisode != null)
-                {
-                    return this.Matched(enrichedGuideProgram, matchedEpisode);
-                }
+                return this.Matched(enrichedGuideProgram, matchedEpisode);
             }
-            return false;
+            return this.Unmatched(enrichedGuideProgram);
         }
     }
 }

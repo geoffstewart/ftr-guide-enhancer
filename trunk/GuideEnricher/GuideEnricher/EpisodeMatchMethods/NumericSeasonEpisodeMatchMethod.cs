@@ -29,7 +29,7 @@
                 return this.Matched(enrichedGuideProgram, matchedEpisode);
             }
             
-            return false;
+            return this.Unmatched(enrichedGuideProgram);
         }
     }
 }
