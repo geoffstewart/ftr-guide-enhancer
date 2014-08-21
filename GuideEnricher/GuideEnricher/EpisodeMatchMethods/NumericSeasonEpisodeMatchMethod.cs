@@ -20,6 +20,10 @@
         public override bool Match(GuideEnricherProgram enrichedGuideProgram, List<TvdbEpisode> episodes)
         {
             var episodeNumber = enrichedGuideProgram.GetValidEpisodeNumber();
+            if (episodeNumber == 0)
+            {
+                return false; // do nothing with episodennumber 0
+            }
 
             this.MatchAttempts++;
 
